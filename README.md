@@ -11,17 +11,21 @@ This project contains **EssayReview.pyw**, a teleport spam bot for Old School Ru
 
 ## Prerequisites
 
-Python 3.9+ on Windows with the following packages installed:
+Python 3.9+ on Windows.
+
+Install the required packages with:
+
+```bash
+pip install -r requirements.txt
+```
+
+The `requirements.txt` file lists:
 
 - `pyautogui`
 - `pygetwindow`
 - `Pillow`
 - `keyboard`
 - `pywin32` (for the overlay window)
-
-```
-pip install pyautogui pygetwindow Pillow keyboard pywin32
-```
 
 ## Running
 
@@ -30,6 +34,10 @@ Run the bot from this directory:
 ```
 python EssayReview.pyw
 ```
+
+The script uses the `.pyw` extension so that no extra console window
+opens on Windows. If you prefer to see the console output you can
+rename it to `EssayReview.py` and launch it the same way.
 
 A prompt asks which teleport to spam-click. After selecting a teleport, the bot begins clicking. The overlay window appears near the RuneLite window and can be dragged or resized; geometry is saved in `overlay_pos.json`.
 
