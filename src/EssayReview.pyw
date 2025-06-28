@@ -97,9 +97,10 @@ TAB_IMAGES = [   # side-panel sprites for random flips
 ]
 
 # ───────────────── Confidence levels ───────────────────────────────
-CONFIDENCE       = 0.90
-STATS_CONFIDENCE = 0.80
-OPEN_CONFIDENCE  = 0.85
+CONFIDENCE          = 0.90
+STATS_CONFIDENCE    = 0.80
+OPEN_CONFIDENCE     = 0.85
+MAGIC_TAB_CONFIDENCE = 0.88
 
 # ───────────────── Behaviour constants ────────────────────────────
 SPAM_MIN, SPAM_MAX               = 1, 70
@@ -222,7 +223,7 @@ def idle_wiggle():
 def click_magic_tab():
     if safe_locate(MAGIC_OPEN_IMAGE, confidence=OPEN_CONFIDENCE, grayscale=True):
         return True
-    tab=safe_locate(MAGIC_TAB_IMAGE, confidence=CONFIDENCE, grayscale=True)
+    tab = safe_locate(MAGIC_TAB_IMAGE, confidence=MAGIC_TAB_CONFIDENCE, grayscale=True)
     if tab:
         bezier_move(*pag.center(tab)); pag.click(); time.sleep(.15)
         return True
