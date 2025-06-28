@@ -145,12 +145,14 @@ class DraftTracker:
             self.update_log(f"❌ {os.path.basename(self.IMG_FILE)} not found")
             return
         try:
-            img = Image.open(path).convert("RGBA")
+            with Image.open(path) as im:
+                img = im.convert("RGBA")
             target_h = int(self.CAPE_BASE_H * self._cape_scale)
             scale = target_h / img.height
             img = img.resize((int(img.width * scale), target_h), Image.LANCZOS)
-            cap_img = ImageTk.PhotoImage(img)
+            cap_img = ImageTk.PhotoImage(img, master=self._root)
             self._images.append(cap_img)             # <<< keep reference
+            self._cape_label.image = cap_img         # keep via widget
             self._cape_label.config(image=cap_img)
             self.update_log("🧙‍♂️  Cape image loaded ✔")
         except Exception as e:
