@@ -2,11 +2,12 @@
 # EssayReview.py – Var/Fal/Cam Teleport Spam Bot
 # v40  • StatsTab.png  • Random tab-flips on idle rest  • GC-safe DraftTracker
 # =============================================================================
-#  Hotkeys:  SPACE = pause / resume  •  ESC = quit immediately
+#  Hotkeys:  F1 = pause/resume  •  F2 = toggle console  •  F3 = quit
 # =============================================================================
 import pyautogui as pag
 from pyautogui import ImageNotFoundException
 import keyboard, time, random, threading, math, os, sys, traceback
+import ctypes
 
 # absolute paths ------------------------------------------------------------
 PKG_DIR = os.path.dirname(__file__)
@@ -22,6 +23,34 @@ try:
     overlay.set_cape_scale(3.0)         # enlarge cape ×2
 except AttributeError:
     pass
+
+# ─────────────────── Console visibility helpers ───────────────────
+console_visible = True
+
+def _console_hwnd():
+    if os.name == 'nt':
+        return ctypes.windll.kernel32.GetConsoleWindow()
+    return None
+
+def hide_console():
+    global console_visible
+    hwnd = _console_hwnd()
+    if hwnd:
+        ctypes.windll.user32.ShowWindow(hwnd, 0)  # SW_HIDE
+        console_visible = False
+
+def show_console():
+    global console_visible
+    hwnd = _console_hwnd()
+    if hwnd:
+        ctypes.windll.user32.ShowWindow(hwnd, 5)  # SW_SHOW
+        console_visible = True
+
+def toggle_console():
+    if console_visible:
+        hide_console()
+    else:
+        show_console()
 
 def log(msg: str):
     stamp = datetime.now().strftime("%H:%M:%S")
@@ -316,12 +345,15 @@ def spam_session():
 def hotkey_thread():
     global bot_active
     while True:
-        if keyboard.is_pressed('space'):
+        if keyboard.is_pressed('f1'):
             bot_active = not bot_active
             log("Bot paused." if not bot_active else "Bot resumed.")
             time.sleep(.4)
-        if keyboard.is_pressed('esc'):
-            log("Bot stopped (ESC)."); os._exit(0)
+        if keyboard.is_pressed('f2'):
+            toggle_console()
+            time.sleep(.4)
+        if keyboard.is_pressed('f3'):
+            log("Bot stopped (F3)."); os._exit(0)
         time.sleep(.05)
 
 # ───────────────── Main loop ───────────────────────────────────────
@@ -338,10 +370,11 @@ def main_loop():
 
 # ───────────────── Entry ───────────────────────────────────────────
 if __name__=="__main__":
+    hide_console()
     threading.Thread(target=hotkey_thread, daemon=True).start()
     refresh_weights()
     next_weight_refresh=int(abs(random.gauss(LOOP_MEAN,LOOP_SD))+1)
-    log(f"Bot started spamming {choice}. SPACE=pause • ESC=quit")
+    log(f"Bot started spamming {choice}. F1=pause • F3=quit")
     try:
         main_loop()
     except Exception as e:
