@@ -1,0 +1,5 @@
+pyautogui
+keyboard
+pygetwindow
+Pillow
+pywin32
