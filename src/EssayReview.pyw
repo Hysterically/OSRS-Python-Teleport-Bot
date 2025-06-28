@@ -330,8 +330,8 @@ def spam_session():
             return
         loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
         if not loc:
-            log("Teleport rune still not found; pressing F7...")
-            pag.press('f7')
+            log("Teleport rune still not found; pressing F6...")
+            pag.press('f6')
             time.sleep(0.5)
             loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
             if not loc:
