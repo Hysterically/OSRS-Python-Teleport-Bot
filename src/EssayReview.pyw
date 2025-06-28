@@ -8,12 +8,12 @@ import pyautogui as pag
 from pyautogui import ImageNotFoundException
 import keyboard, time, random, threading, math, os, sys, traceback
 import ctypes
+from datetime import datetime
 
 # absolute paths ------------------------------------------------------------
 PKG_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.abspath(os.path.join(PKG_DIR, os.pardir))
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
-from datetime import datetime
 from .DraftTracker import DraftTracker
 import pygetwindow as gw
 
@@ -23,6 +23,7 @@ try:
     overlay.set_cape_scale(3.0)         # enlarge cape ×2
 except AttributeError:
     pass
+
 
 # ─────────────────── Console visibility helpers ───────────────────
 console_visible = True

@@ -18,6 +18,7 @@ ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 import pyautogui as pag
 import win32gui
 
+
 class DraftTracker:
     # ---------- CONFIG ----------
     GAME_TITLE  = "RuneLite – I am Hys"
