@@ -18,11 +18,24 @@ from .DraftTracker import DraftTracker
 import pygetwindow as gw
 
 # ───────────────────────── Overlay logger ──────────────────────────
-overlay = DraftTracker()
-try:
-    overlay.set_cape_scale(3.0)         # enlarge cape ×2
-except AttributeError:
-    pass
+# Set this flag to True to enable the overlay window that displays
+# recent log messages alongside a magic cape image. The overlay is
+# disabled by default for headless or testing environments.
+ENABLE_OVERLAY = False
+
+if ENABLE_OVERLAY:
+    overlay = DraftTracker()
+    try:
+        overlay.set_cape_scale(3.0)         # enlarge cape ×2
+    except AttributeError:
+        pass
+else:
+    class _DummyOverlay:
+        def update_log(self, msg: str) -> None:
+            pass
+        def set_cape_scale(self, factor: float) -> None:
+            pass
+    overlay = _DummyOverlay()
 
 
 # ─────────────────── Console visibility helpers ───────────────────
