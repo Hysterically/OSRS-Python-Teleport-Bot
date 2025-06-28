@@ -10,14 +10,19 @@
 import tkinter as tk, tkinter.ttk as ttk
 from PIL import Image, ImageTk
 import threading, queue, json, os
+
+# absolute paths ------------------------------------------------------------
+PKG_DIR = os.path.dirname(__file__)
+ROOT_DIR = os.path.abspath(os.path.join(PKG_DIR, os.pardir, os.pardir))
+ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 import pyautogui as pag
 import win32gui
 
 class DraftTracker:
     # ---------- CONFIG ----------
     GAME_TITLE  = "RuneLite – I am Hys"
-    IMG_FILE    = "magiccape.png"
-    SAVE_FILE   = "overlay_pos.json"
+    IMG_FILE    = os.path.join(ASSETS_DIR, "magiccape.png")
+    SAVE_FILE   = os.path.join(ROOT_DIR, "overlay_pos.json")
     OPACITY     = 0.85
     DEFAULT_W   = 800
     DEFAULT_H   = 140
@@ -135,9 +140,9 @@ class DraftTracker:
 
     # ---------- image loader ----------
     def _load_cape(self):
-        path = os.path.join(os.path.dirname(__file__), self.IMG_FILE)
+        path = self.IMG_FILE
         if not os.path.isfile(path):
-            self.update_log(f"❌ {self.IMG_FILE} not found")
+            self.update_log(f"❌ {os.path.basename(self.IMG_FILE)} not found")
             return
         try:
             img = Image.open(path).convert("RGBA")

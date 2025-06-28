@@ -1,4 +1,4 @@
 @echo off
 cd /d "C:\Users\HaloWarsDE\Desktop\Essays"
-python EssayReview.pyw
+python -m osrs_magic.EssayReview
 pause
