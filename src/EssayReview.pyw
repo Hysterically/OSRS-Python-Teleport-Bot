@@ -287,8 +287,11 @@ def spam_session():
     burst=gaussian_between(SPAM_MIN,SPAM_MAX)
     rest =gaussian_between(REST_MIN,REST_MAX)
 
-    if not safe_locate(MAGIC_OPEN_IMAGE, confidence=OPEN_CONFIDENCE, grayscale=True):
-        click_magic_tab()
+    # Always click the Magic tab before attempting to locate the teleport.
+    # Sometimes random tab flips leave another tab active which prevents the
+    # teleport icon from being found. Clicking the Magic tab each session is
+    # cheap and ensures the spellbook is visible.
+    click_magic_tab()
 
     loc=safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
     if not loc:
