@@ -7,8 +7,13 @@
 import pyautogui as pag
 from pyautogui import ImageNotFoundException
 import keyboard, time, random, threading, math, os, sys, traceback
+
+# absolute paths ------------------------------------------------------------
+PKG_DIR = os.path.dirname(__file__)
+ROOT_DIR = os.path.abspath(os.path.join(PKG_DIR, os.pardir, os.pardir))
+ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 from datetime import datetime
-from DraftTracker import DraftTracker
+from .DraftTracker import DraftTracker
 import pygetwindow as gw
 
 # ───────────────────────── Overlay logger ──────────────────────────
@@ -28,7 +33,11 @@ pag.FAILSAFE = False
 pag.PAUSE    = 0
 
 # ─────────────────── Teleport selection prompt ─────────────────────
-OPTIONS = {"Varrock": "Var.png", "Falador": "Fal.png", "Camelot": "Cam.png"}
+OPTIONS = {
+    "Varrock": os.path.join(ASSETS_DIR, "Var.png"),
+    "Falador": os.path.join(ASSETS_DIR, "Fal.png"),
+    "Camelot": os.path.join(ASSETS_DIR, "Cam.png"),
+}
 choice = pag.confirm("Which teleport should the bot spam-click?",
                      title="Choose Teleport",
                      buttons=list(OPTIONS.keys()))
@@ -42,15 +51,20 @@ def safe_locate(img, **kw):
     except ImageNotFoundException: return None
 
 # ───────────────────── Image assets ────────────────────────────────
-STATS_IMAGE      = "StatsTab.png"
-MAGICLVL_IMAGE   = "MagicLvl.png"
-MAGIC_TAB_IMAGE  = "MagicTab.png"
-MAGIC_OPEN_IMAGE = "MagicTabOpen.png"
+STATS_IMAGE      = os.path.join(ASSETS_DIR, "StatsTab.png")
+MAGICLVL_IMAGE   = os.path.join(ASSETS_DIR, "MagicLvl.png")
+MAGIC_TAB_IMAGE  = os.path.join(ASSETS_DIR, "MagicTab.png")
+MAGIC_OPEN_IMAGE = os.path.join(ASSETS_DIR, "MagicTabOpen.png")
 
 TAB_IMAGES = [   # side-panel sprites for random flips
-    "CombatTab.png", "EmojiTab.png", "FriendsListTab.png",
-    "PrayerTab.png", "QuestTab.png", "MusicTab.png",
-    "SettingsTab.png", "LogOutTab.png"
+    os.path.join(ASSETS_DIR, "CombatTab.png"),
+    os.path.join(ASSETS_DIR, "EmojiTab.png"),
+    os.path.join(ASSETS_DIR, "FriendsListTab.png"),
+    os.path.join(ASSETS_DIR, "PrayerTab.png"),
+    os.path.join(ASSETS_DIR, "QuestTab.png"),
+    os.path.join(ASSETS_DIR, "MusicTab.png"),
+    os.path.join(ASSETS_DIR, "SettingsTab.png"),
+    os.path.join(ASSETS_DIR, "LogOutTab.png")
 ]
 
 # ───────────────── Confidence levels ───────────────────────────────
