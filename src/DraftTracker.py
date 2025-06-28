@@ -7,27 +7,31 @@
 # • Fix B applied: keeps a list of *all* PhotoImages so Tcl never
 #   loses the image handle (eliminates “pyimageX doesn’t exist” crashes)
 # =============================================================================
-import tkinter as tk, tkinter.ttk as ttk
+import win32gui
+import pyautogui as pag
+import tkinter as tk
+import tkinter.ttk as ttk
 from PIL import Image, ImageTk
-import threading, queue, json, os
+import threading
+import queue
+import json
+import os
 
 # absolute paths ------------------------------------------------------------
 PKG_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.abspath(os.path.join(PKG_DIR, os.pardir))
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
-import pyautogui as pag
-import win32gui
 
 
 class DraftTracker:
     # ---------- CONFIG ----------
-    GAME_TITLE  = "RuneLite – I am Hys"
-    IMG_FILE    = os.path.join(ASSETS_DIR, "magiccape.png")
-    SAVE_FILE   = os.path.join(ROOT_DIR, "overlay_pos.json")
-    OPACITY     = 0.85
-    DEFAULT_W   = 800
-    DEFAULT_H   = 140
-    MAX_LINES   = 6
+    GAME_TITLE = "RuneLite – I am Hys"
+    IMG_FILE = os.path.join(ASSETS_DIR, "magiccape.png")
+    SAVE_FILE = os.path.join(ROOT_DIR, "overlay_pos.json")
+    OPACITY = 0.85
+    DEFAULT_W = 800
+    DEFAULT_H = 140
+    MAX_LINES = 6
     CAPE_BASE_H = 96
 
     # ---------- public API ----------
@@ -42,8 +46,8 @@ class DraftTracker:
     # ---------- ctor ----------
     def __init__(self):
         self.queue: queue.Queue[str] = queue.Queue()
-        self.lines: list[str]        = []
-        self._cape_scale             = 1.0
+        self.lines: list[str] = []
+        self._cape_scale = 1.0
         self._images: list[ImageTk.PhotoImage] = []   # <<< Fix B container
         x, y, w, h = self._load_geom() or self._fallback_geom()
         threading.Thread(target=self._run_gui,
@@ -109,9 +113,16 @@ class DraftTracker:
         drag = {"x": 0, "y": 0}
         root.bind("<ButtonPress-1>",
                   lambda e: drag.update(x=e.x_root, y=e.y_root))
-        root.bind("<B1-Motion>", lambda e: (
-            root.geometry(f"+{root.winfo_x()+e.x_root-drag['x']}+{root.winfo_y()+e.y_root-drag['y']}"),
-            drag.update(x=e.x_root, y=e.y_root)))
+        root.bind(
+            "<B1-Motion>",
+            lambda e: (
+                root.geometry(
+                    f"+{root.winfo_x() + e.x_root - drag['x']}+"
+                    f"{root.winfo_y() + e.y_root - drag['y']}"
+                ),
+                drag.update(x=e.x_root, y=e.y_root),
+            ),
+        )
         root.bind("<ButtonRelease-1>", lambda _: self._save_geom(root))
 
         def on_conf(_):
