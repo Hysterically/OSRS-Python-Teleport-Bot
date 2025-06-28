@@ -32,7 +32,7 @@ The `requirements.txt` file lists:
 Run the bot from this directory:
 
 ```
-python EssayReview.pyw
+python -m src.EssayReview
 ```
 
 The script uses the `.pyw` extension so that no extra console window
