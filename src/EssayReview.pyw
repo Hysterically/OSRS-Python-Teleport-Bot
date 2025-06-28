@@ -55,7 +55,6 @@ def toggle_console():
 
 def log(msg: str):
     stamp = datetime.now().strftime("%H:%M:%S")
-    print(stamp, msg, flush=True)
     overlay.update_log(f"{stamp} {msg}")
 
 # ───────────────────── PyAutoGUI tweaks ────────────────────────────
