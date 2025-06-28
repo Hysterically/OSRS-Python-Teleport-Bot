@@ -41,5 +41,5 @@ rename it to `EssayReview.py` and launch it the same way.
 
 A prompt asks which teleport to spam-click. After selecting a teleport, the bot begins clicking. The overlay window appears near the RuneLite window and can be dragged or resized; geometry is saved in `overlay_pos.json`.
 
-Press **F1** at any time to pause or resume automation. Press **F2** to show or hide the console window. Press **F3** to stop the bot completely.
+Press **F1** at any time to pause or resume automation. Press **F2** to show or hide the console window. Press **F3** to stop the bot completely. If the teleport tab still cannot be found after the bot attempts to open it, it will press **F7** automatically as a fallback.
 
