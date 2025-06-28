@@ -6,6 +6,7 @@ This project contains **EssayReview.pyw**, a teleport spam bot for Old School Ru
 
 - Supports Varrock, Falador and Camelot teleports (prompted at start).
 - Overlay HUD showing recent log lines and a magic cape image.
+  Set `OSRS_NO_OVERLAY=1` to run without it.
 - Anti-ban behaviour with varying click timings and occasional idle actions.
 - Hotkeys: **1** to pause/resume, **2** to toggle the console, **3** to quit.
 
@@ -40,7 +41,7 @@ opens on Windows. If you prefer to see the console output you can
 rename it to `EssayReview.py` and launch it the same way.
 
 
-A prompt asks which teleport to spam-click. After selecting a teleport, the bot begins clicking. The overlay window appears near the RuneLite window and can be dragged or resized; geometry is saved in `overlay_pos.json`.
+A prompt asks which teleport to spam-click. After selecting a teleport, the bot begins clicking. The overlay window appears near the RuneLite window and can be dragged or resized; geometry is saved in `overlay_pos.json`. Set `OSRS_NO_OVERLAY=1` before launching if you do not want the HUD.
 
 Press **1** at any time to pause or resume automation. Press **2** to show or hide the console window. Press **3** to stop the bot completely. If the teleport tab still cannot be found after the bot attempts to open it, it will press **F6** automatically as a fallback.
 

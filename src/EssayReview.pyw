@@ -18,11 +18,13 @@ from .DraftTracker import DraftTracker
 import pygetwindow as gw
 
 # ───────────────────────── Overlay logger ──────────────────────────
-overlay = DraftTracker()
-try:
-    overlay.set_cape_scale(3.0)         # enlarge cape ×2
-except AttributeError:
-    pass
+OVERLAY_DISABLED = os.getenv("OSRS_NO_OVERLAY")
+overlay = None if OVERLAY_DISABLED else DraftTracker()
+if overlay:
+    try:
+        overlay.set_cape_scale(3.0)         # enlarge cape ×2
+    except AttributeError:
+        pass
 
 
 # ─────────────────── Console visibility helpers ───────────────────
@@ -56,7 +58,8 @@ def toggle_console():
 def log(msg: str):
     stamp = datetime.now().strftime("%H:%M:%S")
     print(stamp, msg, flush=True)
-    overlay.update_log(f"{stamp} {msg}")
+    if overlay:
+        overlay.update_log(f"{stamp} {msg}")
 
 # ───────────────────── PyAutoGUI tweaks ────────────────────────────
 pag.FAILSAFE = False
