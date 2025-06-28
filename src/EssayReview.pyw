@@ -252,15 +252,23 @@ def scroll_loop(dur):
 
 # ───────────────── Random tab-flipping idle loop ──────────────────
 def random_tab_loop(duration):
-    mu = clamp(random.gauss(4.0,0.7), 2.0, 7.0)   # mean sec between flips
+    mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)   # mean sec between flips
     lam = 1.0 / mu
     t_next = time.time() + random.expovariate(lam)
     end = time.time() + duration
+
+    last_idx = random.randrange(len(TAB_IMAGES))
     while t_next < end and bot_active:
         time.sleep(max(0, t_next - time.time()))
-        tab_img = random.choice(TAB_IMAGES)
+        low = max(0, last_idx - 2)
+        high = min(len(TAB_IMAGES) - 1, last_idx + 2)
+        next_idx = random.randint(low, high)
+        last_idx = next_idx
+        tab_img = TAB_IMAGES[next_idx]
         loc = safe_locate(tab_img, confidence=CONFIDENCE, grayscale=True)
-        if loc: bezier_move(*pag.center(loc)); pag.click()
+        if loc:
+            bezier_move(*pag.center(loc))
+            pag.click()
         t_next += random.expovariate(lam)
 
 # ───────────────── Stats-hover helper ─────────────────────────────
