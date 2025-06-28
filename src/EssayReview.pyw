@@ -328,9 +328,15 @@ def spam_session():
         if not click_magic_tab():
             log("Teleport rune not found and could not open Magic tab; skipping burst.")
             return
-        loc=safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
+        loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
         if not loc:
-            log("Teleport rune still not found; skipping burst."); return
+            log("Teleport rune still not found; pressing F7...")
+            pag.press('f7')
+            time.sleep(0.5)
+            loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
+            if not loc:
+                log("Teleport rune still not found; skipping burst.")
+                return
     x,y = pag.center(loc)
     log(f"Click burst {burst:.1f}s at {(x,y)}")
     end=time.time()+burst
