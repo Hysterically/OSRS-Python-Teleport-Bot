@@ -2,7 +2,7 @@
 # EssayReview.py – Var/Fal/Cam Teleport Spam Bot
 # v40  • StatsTab.png  • Random tab-flips on idle rest  • GC-safe DraftTracker
 # =============================================================================
-#  Hotkeys:  F1 = pause/resume  •  F2 = toggle console  •  F3 = quit
+#  Hotkeys:  1 = pause/resume  •  2 = toggle console  •  3 = quit
 # =============================================================================
 import pyautogui as pag
 from pyautogui import ImageNotFoundException
@@ -358,15 +358,15 @@ def spam_session():
 def hotkey_thread():
     global bot_active
     while True:
-        if keyboard.is_pressed('f1'):
+        if keyboard.is_pressed('1'):
             bot_active = not bot_active
             log("Bot paused." if not bot_active else "Bot resumed.")
             time.sleep(.4)
-        if keyboard.is_pressed('f2'):
+        if keyboard.is_pressed('2'):
             toggle_console()
             time.sleep(.4)
-        if keyboard.is_pressed('f3'):
-            log("Bot stopped (F3)."); os._exit(0)
+        if keyboard.is_pressed('3'):
+            log("Bot stopped (3)."); os._exit(0)
         time.sleep(.05)
 
 # ───────────────── Main loop ───────────────────────────────────────
@@ -387,7 +387,7 @@ if __name__=="__main__":
     threading.Thread(target=hotkey_thread, daemon=True).start()
     refresh_weights()
     next_weight_refresh=int(abs(random.gauss(LOOP_MEAN,LOOP_SD))+1)
-    log(f"Bot started spamming {choice}. F1=pause • F3=quit")
+    log(f"Bot started spamming {choice}. 1=pause • 3=quit")
     try:
         main_loop()
     except Exception as e:
