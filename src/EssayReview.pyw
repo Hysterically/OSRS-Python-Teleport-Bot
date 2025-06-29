@@ -27,8 +27,9 @@ ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 # ───────────────────────── Overlay logger ──────────────────────────
 # Set this flag to True to enable the overlay window that displays
 # recent log messages alongside a magic cape image. The overlay is
-# disabled by default for headless or testing environments.
-ENABLE_OVERLAY = False
+# enabled by default but can be disabled for headless or testing
+# environments.
+ENABLE_OVERLAY = True
 
 if ENABLE_OVERLAY:
     overlay = DraftTracker()
