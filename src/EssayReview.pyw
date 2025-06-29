@@ -25,28 +25,23 @@ ROOT_DIR = os.path.abspath(os.path.join(PKG_DIR, os.pardir))
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 
 # ───────────────────────── Overlay logger ──────────────────────────
-# Set this flag to True to enable the overlay window that displays
-# recent log messages alongside a magic cape image. The overlay is
-# enabled by default but can be disabled for headless or testing
-# environments.
+# Toggle for enabling the draggable overlay that shows recent log
+# messages and a magic cape image. The overlay is enabled by default
+# but can be switched off in the configuration window.
 ENABLE_OVERLAY = True
 
-if ENABLE_OVERLAY:
-    overlay = DraftTracker()
-    try:
-        overlay.set_cape_scale(3.0)  # enlarge cape ×2
-    except AttributeError:
+
+class _DummyOverlay:
+    def update_log(self, msg: str) -> None:
         pass
-else:
 
-    class _DummyOverlay:
-        def update_log(self, msg: str) -> None:
-            pass
+    def set_cape_scale(self, factor: float) -> None:
+        pass
 
-        def set_cape_scale(self, factor: float) -> None:
-            pass
 
-    overlay = _DummyOverlay()
+# Placeholder overlay; the real DraftTracker instance is created after
+# the configuration window so the user can disable it before it starts.
+overlay: object = _DummyOverlay()
 
 
 # ─────────────────── Console visibility helpers ───────────────────
@@ -92,6 +87,74 @@ def log(msg: str):
     print(f"{stamp} {msg}", flush=True)
 
 
+# ───────────────────── Config prompt ───────────────────────────────
+
+def config_prompt():
+    """Interactive window for teleport and feature settings."""
+    if "PYTEST_CURRENT_TEST" in os.environ or not os.environ.get("DISPLAY"):
+        # during automated tests or headless environments use defaults
+        global choice
+        choice = list(OPTIONS.keys())[0]
+        return choice
+
+    import tkinter as tk
+    from tkinter import ttk
+
+    root = tk.Tk()
+    root.title("Bot Configuration")
+
+    tele_var = tk.StringVar(value=list(OPTIONS.keys())[0])
+    tk.Label(root, text="Select teleport:").pack(anchor="w", padx=10, pady=(10, 0))
+    for opt in OPTIONS.keys():
+        ttk.Radiobutton(root, text=opt, value=opt, variable=tele_var).pack(
+            anchor="w", padx=20
+        )
+
+    overlay_var = tk.BooleanVar(value=ENABLE_OVERLAY)
+    over_var = tk.BooleanVar(value=ENABLE_OVERSHOOT)
+    jitter_var = tk.BooleanVar(value=ENABLE_JITTER)
+    vel_var = tk.BooleanVar(value=ENABLE_VELOCITY_LIMIT)
+    final_var = tk.BooleanVar(value=CHECK_FINAL_POS)
+    log_var = tk.BooleanVar(value=LOG_CLICKS)
+
+    tk.Label(root, text="Options:").pack(anchor="w", padx=10, pady=(10, 0))
+    tk.Checkbutton(root, text="Enable overlay", variable=overlay_var).pack(
+        anchor="w", padx=20
+    )
+    tk.Checkbutton(root, text="Mouse overshoot", variable=over_var).pack(
+        anchor="w", padx=20
+    )
+    tk.Checkbutton(root, text="Mouse jitter", variable=jitter_var).pack(
+        anchor="w", padx=20
+    )
+    tk.Checkbutton(root, text="Velocity limit", variable=vel_var).pack(
+        anchor="w", padx=20
+    )
+    tk.Checkbutton(root, text="Check final position", variable=final_var).pack(
+        anchor="w", padx=20
+    )
+    tk.Checkbutton(root, text="Log clicks", variable=log_var).pack(
+        anchor="w", padx=20
+    )
+
+    def _start():
+        global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
+        global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, choice
+        ENABLE_OVERLAY = overlay_var.get()
+        ENABLE_OVERSHOOT = over_var.get()
+        ENABLE_JITTER = jitter_var.get()
+        ENABLE_VELOCITY_LIMIT = vel_var.get()
+        CHECK_FINAL_POS = final_var.get()
+        LOG_CLICKS = log_var.get()
+        choice = tele_var.get()
+        root.destroy()
+
+    ttk.Button(root, text="Start", command=_start).pack(pady=10)
+    root.protocol("WM_DELETE_WINDOW", lambda: sys.exit("No teleport selected – exiting."))
+    root.mainloop()
+    return choice
+
+
 # ───────────────────── PyAutoGUI tweaks ────────────────────────────
 pag.FAILSAFE = False
 pag.PAUSE = 0
@@ -102,14 +165,19 @@ OPTIONS = {
     "Falador": os.path.join(ASSETS_DIR, "Fal.png"),
     "Camelot": os.path.join(ASSETS_DIR, "Cam.png"),
 }
-choice = pag.confirm(
-    "Which teleport should the bot spam-click?",
-    title="Choose Teleport",
-    buttons=list(OPTIONS.keys()),
-)
+
+choice = None
+config_prompt()
 if choice is None:
     sys.exit("No teleport selected – exiting.")
 TELEPORT_IMAGE = OPTIONS[choice]
+
+if ENABLE_OVERLAY:
+    overlay = DraftTracker()
+    try:
+        overlay.set_cape_scale(3.0)
+    except AttributeError:
+        pass
 
 # ─────────────────── Safe locate wrapper ───────────────────────────
 
