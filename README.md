@@ -10,6 +10,7 @@ This project contains **EssayReview.pyw**, a teleport spam bot for Old School Ru
 - Randomised cursor speed for more human-like movement.
 - Optional "robust click" mode that holds the mouse
   button down briefly so clicks aren't missed on some setups.
+- Option to disable all AFK events in the configuration window.
 - Hotkeys: **1** to pause/resume, **2** to toggle the console, **3** to quit.
 
 ## Prerequisites
