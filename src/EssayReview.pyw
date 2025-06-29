@@ -445,6 +445,7 @@ def click_edge_youtube():
 
 
 def scroll_loop(dur):
+    log(f"Short AFK: scrolling for {dur:.1f}s")
     end = time.time() + dur
     while time.time() < end and bot_active:
         pag.scroll(random.randint(-600, 600))
@@ -454,6 +455,7 @@ def scroll_loop(dur):
 
 
 def random_tab_loop(duration):
+    log(f"Short AFK: tab flipping for {duration:.1f}s")
     mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)   # mean sec between flips
     lam = 1.0 / mu
     t_next = time.time() + random.expovariate(lam)
@@ -477,6 +479,7 @@ def random_tab_loop(duration):
 
 
 def stats_hover(dur) -> bool:
+    log(f"Short AFK: hovering stats for {dur:.1f}s")
     stats = safe_locate(
         STATS_IMAGE,
         confidence=STATS_CONFIDENCE,
@@ -516,6 +519,7 @@ def default_rest(dur):
 def handle_short_rest(rest):
     if rest < .25:
         return
+    log(f"Short AFK task for {rest:.1f}s")
     maybe_outlier_event("rest")
     if STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB:
         if not stats_hover(rest):
