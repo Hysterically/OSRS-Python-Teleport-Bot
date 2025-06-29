@@ -164,6 +164,15 @@ next_afk_time = 0
 anti_ban_weights = {}
 overshoot_chance = 0.30
 
+# Maximum allowed acceleration in pixels/s² for mouse segments. Velocities are
+# measured per Bézier segment and durations are increased when the change in
+# velocity would exceed this threshold.
+ACCEL_LIMIT = 5000
+
+# Stores the instantaneous velocity of each segment from the last bezier_move
+# call for debugging and tuning purposes.
+last_move_velocities = []
+
 # ───────────────── Maths helpers ───────────────────────────────────
 
 
@@ -275,7 +284,27 @@ def _curve(st, en):
     return pts
 
 
-def fitts_time(d, w, a=.05, b=.05): return a + b * math.log2(1 + d / w)
+def fitts_time(d, w, a=.05, b=.05):
+    return a + b * math.log2(1 + d / w)
+
+
+def _cap_segment_duration(dist: float, dur: float, prev_v: float | None) -> float:
+    """Ensure the change in velocity does not exceed ACCEL_LIMIT."""
+    if prev_v is None:
+        return dur
+    v = dist / dur
+    acc = (v - prev_v) / dur
+    if abs(acc) <= ACCEL_LIMIT:
+        return dur
+    if v >= prev_v:
+        dur = max(dur, (-prev_v + math.sqrt(prev_v * prev_v +
+                        4 * ACCEL_LIMIT * dist)) / (2 * ACCEL_LIMIT))
+    else:
+        disc = prev_v * prev_v - 4 * ACCEL_LIMIT * dist
+        if disc >= 0:
+            dur = max(dur, (prev_v + math.sqrt(disc)) /
+                        (2 * ACCEL_LIMIT))
+    return dur
 
 
 def bezier_move(tx, ty):
@@ -297,11 +326,18 @@ def bezier_move(tx, ty):
                    b=random.uniform(.04, .07))
     # Add built-in random variation and slower baseline
     T *= random.uniform(1.6, 2.4)
+    global last_move_velocities
+    last_move_velocities = []
+    prev_v = None
     for (sx, sy), (px, py) in zip(path[:-1], path[1:]):
         seg = math.hypot(px - sx, py - sy)
         seg_T = seg / total * T * random.uniform(0.8, 1.2)
-        pag.moveTo(px, py, duration=clamp(seg_T, .01, .90),
+        seg_T = _cap_segment_duration(seg, clamp(seg_T, .01, .90), prev_v)
+        v = seg / seg_T
+        last_move_velocities.append(v)
+        pag.moveTo(px, py, duration=seg_T,
                    tween=random.choice(TWEEN_FUNCS))
+        prev_v = v
 
 
 def idle_wiggle():
