@@ -79,6 +79,10 @@ ENABLE_BROWSER_AFK = True
 # If enabled the bot flips through random side tabs while idling.
 ENABLE_TAB_FLIP = True
 
+# Disable the brief rest between click bursts. When off the bot immediately
+# starts the next burst without pausing.
+ENABLE_REST = True
+
 
 
 class _DummyOverlay:
@@ -190,6 +194,7 @@ def config_prompt():
     stats_var = tk.BooleanVar(value=ENABLE_STATS_HOVER)
     browser_var = tk.BooleanVar(value=ENABLE_BROWSER_AFK)
     tabflip_var = tk.BooleanVar(value=ENABLE_TAB_FLIP)
+    rest_var = tk.BooleanVar(value=ENABLE_REST)
 
     tk.Label(root, text="Options:", bg=bg, fg=fg).pack(anchor="w", padx=10, pady=(10, 0))
 
@@ -228,12 +233,14 @@ def config_prompt():
     add_switch("Hover stats during rests", stats_var)
     add_switch("Use Edge/YouTube during AFK", browser_var)
     add_switch("Random tab flips when idle", tabflip_var)
+    add_switch("Rest between bursts", rest_var)
 
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
         global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
         global ENABLE_AFK, ENABLE_ANTIBAN
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
+        global ENABLE_REST
         ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
@@ -246,6 +253,7 @@ def config_prompt():
         ENABLE_STATS_HOVER = stats_var.get()
         ENABLE_BROWSER_AFK = browser_var.get()
         ENABLE_TAB_FLIP = tabflip_var.get()
+        ENABLE_REST = rest_var.get()
         choice = tele_var.get()
         root.destroy()
 
@@ -882,8 +890,11 @@ def spam_session():
         if feature("idle_wiggle"):
             idle_wiggle()
 
-    log(f"Burst done. Rest {rest:.1f}s...")
-    handle_short_rest(rest)
+    if ENABLE_REST:
+        log(f"Burst done. Rest {rest:.1f}s...")
+        handle_short_rest(rest)
+    else:
+        log("Burst done. Rest skipped.")
 
 
 
