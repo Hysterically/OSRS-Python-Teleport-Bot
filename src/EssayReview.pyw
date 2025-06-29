@@ -272,7 +272,7 @@ def maybe_outlier_event(ctx: str):
             dx = random.randint(25, 80) * random.choice([-1, 1])
             dy = random.randint(25, 80) * random.choice([-1, 1])
             bezier_move(x + dx, y + dy)
-            pag.click()
+            reliable_click()
             time.sleep(0.3)
     elif event == "scroll_spam":
         cx, cy = pag.position()
@@ -412,6 +412,15 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
         prev_v = v
         dist_done += seg_len
 
+    # ensure the cursor ends exactly on the target
+    pag.moveTo(tx, ty)
+
+
+def reliable_click():
+    pag.mouseDown()
+    time.sleep(random.uniform(0.02, 0.05))
+    pag.mouseUp()
+
 
 def idle_wiggle():
     x, y = pag.position()
@@ -427,7 +436,7 @@ def click_magic_tab():
     tab = safe_locate(MAGIC_TAB_IMAGE, confidence=MAGIC_TAB_CONFIDENCE, grayscale=True)
     if tab:
         bezier_move(*pag.center(tab))
-        pag.click()
+        reliable_click()
         time.sleep(0.15)
         return True
     log("⚠️ Could not open Magic tab.")
@@ -453,7 +462,7 @@ def click_edge_youtube():
     tx = random.randint(win.left + 60, win.right - 60)
     ty = random.randint(win.top + 100, win.bottom - 100)
     bezier_move(tx, ty)
-    pag.click()
+    reliable_click()
     return True
 
 
@@ -486,7 +495,7 @@ def random_tab_loop(duration):
         loc = safe_locate(tab_img, confidence=CONFIDENCE, grayscale=True)
         if loc:
             bezier_move(*pag.center(loc))
-            pag.click()
+            reliable_click()
         t_next += random.expovariate(lam)
 
 
@@ -499,7 +508,7 @@ def stats_hover(dur) -> bool:
     if not stats:
         return False
     bezier_move(*pag.center(stats))
-    pag.click()
+    reliable_click()
     time.sleep(0.2)
     magic = safe_locate(MAGICLVL_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True)
     if not magic:
@@ -603,10 +612,10 @@ def spam_session():
         # Some systems occasionally miss the down/up sequence which results in
         # a hover without an actual click. Using the higher level click()
         # helper provides more reliable behaviour across platforms.
-        pag.click()
+        reliable_click()
         if feature("double_click"):
             time.sleep(random.uniform(0.03, 0.08))
-            pag.click()
+            reliable_click()
         gap = (
             gamma_between(0.12, 0.60, 2.5)
             if feature("drift_click_timing")
