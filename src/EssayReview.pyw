@@ -186,6 +186,13 @@ JITTER_PIXELS = 1  # ±pixels moved during jitter
 JITTER_DIST_THRESHOLD = 100  # only apply jitter when distance > this
 JITTER_PAUSE_MIN, JITTER_PAUSE_MAX = 0.003, 0.010
 
+# Feature toggles ----------------------------------------------------
+ENABLE_OVERSHOOT = True
+ENABLE_JITTER = True
+ENABLE_VELOCITY_LIMIT = True
+CHECK_FINAL_POS = True
+LOG_CLICKS = True
+
 # ───────────────── Runtime state ───────────────────────────────────
 bot_active = True
 loop_counter = 0
@@ -333,11 +340,18 @@ def fitts_time(d, w, a=0.05, b=0.05):
 def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
     cx, cy = pag.position()
     dist = math.hypot(tx - cx, ty - cy)
+    debug(f"bezier_move start {(cx, cy)} -> {(tx, ty)} dist {dist:.1f}")
     if jitter_prob is None:
         jitter_prob = JITTER_PROB
     if jitter_px is None:
         jitter_px = JITTER_PIXELS
-    use_over = random.random() < overshoot_chance and dist > 30
+
+    use_over = (
+        ENABLE_OVERSHOOT
+        and random.random() < overshoot_chance
+        and dist > 30
+        and dist > 20
+    )
     if use_over:
         debug(f"Overshoot move to ({tx}, {ty}) distance {dist:.1f}")
         max_over = clamp(dist * 0.15, OVERSHOOT_MIN, OVERSHOOT_MAX)
@@ -369,6 +383,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
     for seg in seg_lens:
         cum += seg
         times.append(_sig(cum / total) * T)
+    debug(f"total move time {T:.3f}s over {len(seg_lens)} segments")
 
     global last_move_velocities
     last_move_velocities = []
@@ -379,7 +394,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
         seg_T = (t1 - t0) * random.uniform(0.9, 1.1)
         seg_T = clamp(seg_T, 0.01, 0.90)
         v = seg_len / seg_T
-        if abs(v - prev_v) / seg_T > MAX_ACCEL:
+        if ENABLE_VELOCITY_LIMIT and abs(v - prev_v) / seg_T > MAX_ACCEL:
             if v > prev_v:
                 seg_T = max(
                     seg_T,
@@ -402,8 +417,15 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
                 v = allowed_v
                 seg_T = seg_len / v
         last_move_velocities.append(v)
+        debug(
+            f"seg to {(px, py)} len={seg_len:.1f} T={seg_T:.3f} v={v:.1f}"
+        )
         pag.moveTo(px, py, duration=seg_T, tween=random.choice(TWEEN_FUNCS))
-        if dist > JITTER_DIST_THRESHOLD and random.random() < jitter_prob:
+        if (
+            ENABLE_JITTER
+            and dist > JITTER_DIST_THRESHOLD
+            and random.random() < jitter_prob
+        ):
             jx = random.choice([-1, 1]) * jitter_px
             jy = random.choice([-1, 1]) * jitter_px
             pag.moveRel(jx, jy)
@@ -414,6 +436,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
 
     # ensure the cursor ends exactly on the target
     pag.moveTo(tx, ty)
+    debug(f"move complete at {pag.position()}")
 
 
 def idle_wiggle():
@@ -600,15 +623,40 @@ def spam_session():
     while time.time() < end and bot_active:
         handle_afk()
         maybe_outlier_event("burst")
-        bezier_move(x + random.randint(-2, 2), y + random.randint(-2, 2))
+        target_x = x + random.randint(-2, 2)
+        target_y = y + random.randint(-2, 2)
+        bezier_move(target_x, target_y)
+        if CHECK_FINAL_POS:
+            fx, fy = pag.position()
+            if math.hypot(fx - target_x, fy - target_y) > 3:
+                debug(
+                    f"cursor drifted to {(fx, fy)} expected {(target_x, target_y)}"
+                )
+                pag.moveTo(target_x, target_y)
         if feature("finger_hesitation"):
             time.sleep(random.uniform(0.05, 0.15))
         # Some systems occasionally miss the down/up sequence which results in
         # a hover without an actual click. Using the higher level click()
         # helper provides more reliable behaviour across platforms.
+        if LOG_CLICKS:
+            debug(f"click at {pag.position()}")
         pag.click()
+        if LOG_CLICKS:
+            debug("click issued")
+        if CHECK_FINAL_POS:
+            chk = safe_locate(
+                TELEPORT_IMAGE,
+                confidence=CONFIDENCE,
+                grayscale=True,
+                region=(x - 5, y - 5, 10, 10),
+            )
+            if chk:
+                debug("click retry")
+                pag.click()
         if feature("double_click"):
             time.sleep(random.uniform(0.03, 0.08))
+            if LOG_CLICKS:
+                debug("double click")
             pag.click()
         gap = (
             gamma_between(0.12, 0.60, 2.5)
