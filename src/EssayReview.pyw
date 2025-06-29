@@ -34,16 +34,18 @@ ENABLE_OVERLAY = True
 if ENABLE_OVERLAY:
     overlay = DraftTracker()
     try:
-        overlay.set_cape_scale(3.0)         # enlarge cape ×2
+        overlay.set_cape_scale(3.0)  # enlarge cape ×2
     except AttributeError:
         pass
 else:
+
     class _DummyOverlay:
         def update_log(self, msg: str) -> None:
             pass
 
         def set_cape_scale(self, factor: float) -> None:
             pass
+
     overlay = _DummyOverlay()
 
 
@@ -52,7 +54,7 @@ console_visible = True
 
 
 def _console_hwnd():
-    if os.name == 'nt':
+    if os.name == "nt":
         return ctypes.windll.kernel32.GetConsoleWindow()
     return None
 
@@ -100,9 +102,11 @@ OPTIONS = {
     "Falador": os.path.join(ASSETS_DIR, "Fal.png"),
     "Camelot": os.path.join(ASSETS_DIR, "Cam.png"),
 }
-choice = pag.confirm("Which teleport should the bot spam-click?",
-                     title="Choose Teleport",
-                     buttons=list(OPTIONS.keys()))
+choice = pag.confirm(
+    "Which teleport should the bot spam-click?",
+    title="Choose Teleport",
+    buttons=list(OPTIONS.keys()),
+)
 if choice is None:
     sys.exit("No teleport selected – exiting.")
 TELEPORT_IMAGE = OPTIONS[choice]
@@ -129,7 +133,7 @@ MAGICLVL_IMAGE = os.path.join(ASSETS_DIR, "MagicLvl.png")
 MAGIC_TAB_IMAGE = os.path.join(ASSETS_DIR, "MagicTab.png")
 MAGIC_OPEN_IMAGE = os.path.join(ASSETS_DIR, "MagicTabOpen.png")
 
-TAB_IMAGES = [   # side-panel sprites for random flips
+TAB_IMAGES = [  # side-panel sprites for random flips
     os.path.join(ASSETS_DIR, "CombatTab.png"),
     os.path.join(ASSETS_DIR, "EmojiTab.png"),
     os.path.join(ASSETS_DIR, "FriendsListTab.png"),
@@ -137,7 +141,7 @@ TAB_IMAGES = [   # side-panel sprites for random flips
     os.path.join(ASSETS_DIR, "QuestTab.png"),
     os.path.join(ASSETS_DIR, "MusicTab.png"),
     os.path.join(ASSETS_DIR, "SettingsTab.png"),
-    os.path.join(ASSETS_DIR, "LogOutTab.png")
+    os.path.join(ASSETS_DIR, "LogOutTab.png"),
 ]
 
 # ───────────────── Confidence levels ───────────────────────────────
@@ -168,13 +172,18 @@ STATS_REST_PROB = 0.10
 STATS_REST_TEST_MODE = False
 
 TWEEN_FUNCS = [
-    pag.easeInQuad, pag.easeOutQuad, pag.easeInOutQuad,
-    pag.easeInCubic, pag.easeOutCubic, pag.easeInOutCubic]
+    pag.easeInQuad,
+    pag.easeOutQuad,
+    pag.easeInOutQuad,
+    pag.easeInCubic,
+    pag.easeOutCubic,
+    pag.easeInOutCubic,
+]
 
 # Jitter settings for long mouse moves
-JITTER_PROB = 0.1                  # chance per segment to add jitter
-JITTER_PIXELS = 1                  # ±pixels moved during jitter
-JITTER_DIST_THRESHOLD = 100        # only apply jitter when distance > this
+JITTER_PROB = 0.1  # chance per segment to add jitter
+JITTER_PIXELS = 1  # ±pixels moved during jitter
+JITTER_DIST_THRESHOLD = 100  # only apply jitter when distance > this
 JITTER_PAUSE_MIN, JITTER_PAUSE_MAX = 0.003, 0.010
 
 # ───────────────── Runtime state ───────────────────────────────────
@@ -189,7 +198,8 @@ last_move_velocities: list[float] = []
 # ───────────────── Maths helpers ───────────────────────────────────
 
 
-def clamp(v, lo, hi): return max(lo, min(hi, v))
+def clamp(v, lo, hi):
+    return max(lo, min(hi, v))
 
 
 def gaussian_between(lo, hi, m=None, s=None):
@@ -211,7 +221,8 @@ def lognorm_between(lo, hi, mu=None, sigma=0.4):
 
 
 class PinkNoise:
-    def __init__(self, a=0.8): self.a, self.p = a, 0
+    def __init__(self, a=0.8):
+        self.a, self.p = a, 0
 
     def next(self, s=3):
         self.p = self.a * self.p + (1 - self.a) * random.uniform(-1, 1)
@@ -226,16 +237,19 @@ pink = PinkNoise()
 def refresh_weights():
     global anti_ban_weights, overshoot_chance, next_afk_time
     anti_ban_weights = {
-        "drift_click_timing": clamp(random.gauss(.5, .2), .1, .9),
-        "idle_wiggle": clamp(random.gauss(.4, .15), .05, .8),
-        "double_click": clamp(random.gauss(.2, .1), 0, .5),
-        "finger_hesitation": clamp(random.gauss(.25, .1), 0, .6)}
-    overshoot_chance = clamp(random.gauss(.3, .08), .1, .5)
+        "drift_click_timing": clamp(random.gauss(0.5, 0.2), 0.1, 0.9),
+        "idle_wiggle": clamp(random.gauss(0.4, 0.15), 0.05, 0.8),
+        "double_click": clamp(random.gauss(0.2, 0.1), 0, 0.5),
+        "finger_hesitation": clamp(random.gauss(0.25, 0.1), 0, 0.6),
+    }
+    overshoot_chance = clamp(random.gauss(0.3, 0.08), 0.1, 0.5)
     next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
     log("Anti-ban settings updated.")
 
 
-def feature(k): return random.random() < anti_ban_weights.get(k, 0)
+def feature(k):
+    return random.random() < anti_ban_weights.get(k, 0)
+
 
 # ───────────────── Outlier events (rarer ×10) ─────────────────────
 
@@ -244,19 +258,15 @@ def maybe_outlier_event(ctx: str):
     odds = {"burst": 0.0006, "rest": 0.0008, "afk": 0.0010}
     if random.random() > odds.get(ctx, 0.0006):
         return
-    event = random.choice(["corner_drift", "off_click",
-                           "scroll_spam", "camera_circle"])
+    event = random.choice(["corner_drift", "off_click", "scroll_spam", "camera_circle"])
     log(f"⚠️ Outlier event: {event} during {ctx}")
     if event == "corner_drift":
         start = pag.position()
         bezier_move(5, 5)
-        time.sleep(random.uniform(.3, .8))
+        time.sleep(random.uniform(0.3, 0.8))
         bezier_move(*start)
     elif event == "off_click":
-        loc = safe_locate(
-            TELEPORT_IMAGE,
-            confidence=CONFIDENCE,
-            grayscale=True)
+        loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
         if loc:
             x, y = pag.center(loc)
             dx = random.randint(25, 80) * random.choice([-1, 1])
@@ -271,7 +281,7 @@ def maybe_outlier_event(ctx: str):
             off_y = random.randint(-20, 20)
             bezier_move(cx + off_x, cy + off_y)
             pag.scroll(random.randint(-300, 300))
-            time.sleep(random.uniform(.08, .18))
+            time.sleep(random.uniform(0.08, 0.18))
     elif event == "camera_circle":
         cx, cy = pag.position()
         r = random.randint(20, 40)
@@ -279,6 +289,7 @@ def maybe_outlier_event(ctx: str):
             tx = cx + int(r * math.cos(math.radians(a)))
             ty = cy + int(r * math.sin(math.radians(a)))
             bezier_move(tx, ty)
+
 
 # ───────────────── Mouse helpers (Fitts+Bézier) ───────────────────
 
@@ -315,7 +326,8 @@ def _curve(st, en):
     return pts
 
 
-def fitts_time(d, w, a=.05, b=.05): return a + b * math.log2(1 + d / w)
+def fitts_time(d, w, a=0.05, b=0.05):
+    return a + b * math.log2(1 + d / w)
 
 
 def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
@@ -331,17 +343,18 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
         max_over = clamp(dist * 0.15, OVERSHOOT_MIN, OVERSHOOT_MAX)
         dx = random.choice([-1, 1]) * random.uniform(OVERSHOOT_MIN, max_over)
         dy = random.choice([-1, 1]) * random.uniform(OVERSHOOT_MIN, max_over)
-        path = _curve((cx, cy), (tx + dx, ty + dy)) + \
-            _curve((tx + dx, ty + dy), (tx, ty))
+        path = _curve((cx, cy), (tx + dx, ty + dy)) + _curve(
+            (tx + dx, ty + dy), (tx, ty)
+        )
     else:
         path = _curve((cx, cy), (tx, ty))
     path = _smooth_path(path)
     W = random.uniform(32, 48)
-    seg_lens = [math.hypot(px - sx, py - sy)
-                for (sx, sy), (px, py) in zip(path[:-1], path[1:])]
+    seg_lens = [
+        math.hypot(px - sx, py - sy) for (sx, sy), (px, py) in zip(path[:-1], path[1:])
+    ]
     total = sum(seg_lens) or 1
-    T = fitts_time(total, W, a=random.uniform(.04, .06),
-                   b=random.uniform(.04, .07))
+    T = fitts_time(total, W, a=random.uniform(0.04, 0.06), b=random.uniform(0.04, 0.07))
     # Add built-in random variation and slower baseline
     T *= random.uniform(1.6, 2.4)
 
@@ -364,20 +377,24 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
     for (px, py), seg_len, t0, t1 in zip(path[1:], seg_lens, times[:-1], times[1:]):
         remaining = total - dist_done
         seg_T = (t1 - t0) * random.uniform(0.9, 1.1)
-        seg_T = clamp(seg_T, .01, .90)
+        seg_T = clamp(seg_T, 0.01, 0.90)
         v = seg_len / seg_T
         if abs(v - prev_v) / seg_T > MAX_ACCEL:
             if v > prev_v:
-                seg_T = max(seg_T, (-prev_v + math.sqrt(prev_v ** 2 + 4 * MAX_ACCEL * seg_len)) / (2 * MAX_ACCEL))
+                seg_T = max(
+                    seg_T,
+                    (-prev_v + math.sqrt(prev_v**2 + 4 * MAX_ACCEL * seg_len))
+                    / (2 * MAX_ACCEL),
+                )
             else:
-                disc = prev_v ** 2 - 4 * MAX_ACCEL * seg_len
+                disc = prev_v**2 - 4 * MAX_ACCEL * seg_len
                 if disc > 0 and prev_v > 0:
                     seg_T = max(seg_T, (prev_v + math.sqrt(disc)) / (2 * MAX_ACCEL))
                 elif prev_v > 0:
                     seg_T = max(seg_T, seg_len / prev_v)
                 else:
                     seg_T = max(seg_T, math.sqrt(seg_len / MAX_ACCEL))
-            seg_T = clamp(seg_T, .01, .90)
+            seg_T = clamp(seg_T, 0.01, 0.90)
             v = seg_len / seg_T
         if remaining < SMOOTH_STOP_DIST and prev_v > 0:
             allowed_v = prev_v * max(remaining / SMOOTH_STOP_DIST, 0.1)
@@ -385,9 +402,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
                 v = allowed_v
                 seg_T = seg_len / v
         last_move_velocities.append(v)
-        pag.moveTo(px, py,
-                   duration=seg_T,
-                   tween=random.choice(TWEEN_FUNCS))
+        pag.moveTo(px, py, duration=seg_T, tween=random.choice(TWEEN_FUNCS))
         if dist > JITTER_DIST_THRESHOLD and random.random() < jitter_prob:
             jx = random.choice([-1, 1]) * jitter_px
             jy = random.choice([-1, 1]) * jitter_px
@@ -400,36 +415,34 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
 
 def idle_wiggle():
     x, y = pag.position()
-    pag.moveTo(x + pink.next(), y + pink.next(),
-               duration=random.uniform(.02, .05))
+    pag.moveTo(x + pink.next(), y + pink.next(), duration=random.uniform(0.02, 0.05))
+
 
 # ───────────────── Magic tab helper ───────────────────────────────
 
 
 def click_magic_tab():
-    if safe_locate(
-            MAGIC_OPEN_IMAGE,
-            confidence=OPEN_CONFIDENCE,
-            grayscale=True):
+    if safe_locate(MAGIC_OPEN_IMAGE, confidence=OPEN_CONFIDENCE, grayscale=True):
         return True
-    tab = safe_locate(
-        MAGIC_TAB_IMAGE,
-        confidence=MAGIC_TAB_CONFIDENCE,
-        grayscale=True)
+    tab = safe_locate(MAGIC_TAB_IMAGE, confidence=MAGIC_TAB_CONFIDENCE, grayscale=True)
     if tab:
         bezier_move(*pag.center(tab))
         pag.click()
-        time.sleep(.15)
+        time.sleep(0.15)
         return True
     log("⚠️ Could not open Magic tab.")
     return False
+
 
 # ───────────────── Edge / YouTube helpers ─────────────────────────
 
 
 def edge_windows():
-    return [w for w in gw.getAllWindows() if not w.isMinimized and (
-        'Edge' in w.title or 'Microsoft Edge' in w.title)]
+    return [
+        w
+        for w in gw.getAllWindows()
+        if not w.isMinimized and ("Edge" in w.title or "Microsoft Edge" in w.title)
+    ]
 
 
 def click_edge_youtube():
@@ -449,14 +462,15 @@ def scroll_loop(dur):
     end = time.time() + dur
     while time.time() < end and bot_active:
         pag.scroll(random.randint(-600, 600))
-        time.sleep(random.uniform(.5, 1.4))
+        time.sleep(random.uniform(0.5, 1.4))
+
 
 # ───────────────── Random tab-flipping idle loop ──────────────────
 
 
 def random_tab_loop(duration):
     log(f"Short AFK: tab flipping for {duration:.1f}s")
-    mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)   # mean sec between flips
+    mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)  # mean sec between flips
     lam = 1.0 / mu
     t_next = time.time() + random.expovariate(lam)
     end = time.time() + duration
@@ -475,24 +489,19 @@ def random_tab_loop(duration):
             pag.click()
         t_next += random.expovariate(lam)
 
+
 # ───────────────── Stats-hover helper ─────────────────────────────
 
 
 def stats_hover(dur) -> bool:
     log(f"Short AFK: hovering stats for {dur:.1f}s")
-    stats = safe_locate(
-        STATS_IMAGE,
-        confidence=STATS_CONFIDENCE,
-        grayscale=True)
+    stats = safe_locate(STATS_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True)
     if not stats:
         return False
     bezier_move(*pag.center(stats))
     pag.click()
-    time.sleep(.2)
-    magic = safe_locate(
-        MAGICLVL_IMAGE,
-        confidence=STATS_CONFIDENCE,
-        grayscale=True)
+    time.sleep(0.2)
+    magic = safe_locate(MAGICLVL_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True)
     if not magic:
         return False
     bezier_move(*pag.center(magic))
@@ -501,15 +510,16 @@ def stats_hover(dur) -> bool:
         if feature("idle_wiggle"):
             idle_wiggle()
         maybe_outlier_event("rest")
-        time.sleep(.25)
+        time.sleep(0.25)
     return True
+
 
 # ───────────────── Short-rest handler ─────────────────────────────
 
 
 def default_rest(dur):
     ch = random.random()
-    if ch < .60 and click_edge_youtube():
+    if ch < 0.60 and click_edge_youtube():
         scroll_loop(dur)
     else:
         random_tab_loop(dur)
@@ -517,7 +527,7 @@ def default_rest(dur):
 
 
 def handle_short_rest(rest):
-    if rest < .25:
+    if rest < 0.25:
         return
     log(f"Short AFK task for {rest:.1f}s")
     maybe_outlier_event("rest")
@@ -526,6 +536,7 @@ def handle_short_rest(rest):
             default_rest(rest)
     else:
         default_rest(rest)
+
 
 # ───────────────── AFK handler (unchanged) ────────────────────────
 
@@ -540,16 +551,17 @@ def handle_afk():
     dur = gamma_between(53, 300, 2.1) if is_long else gamma_between(1, 47, 2.1)
     log(f"{'Long' if is_long else 'Short'} AFK: {int(dur)} s")
     ch = random.random()
-    if (ch < .60 if is_long else ch < .50) and click_edge_youtube():
+    if (ch < 0.60 if is_long else ch < 0.50) and click_edge_youtube():
         scroll_loop(dur)
     else:
         end = time.time() + dur
         while time.time() < end and bot_active:
             maybe_outlier_event("afk")
-            time.sleep(.5)
+            time.sleep(0.5)
     next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
     debug(f"Next AFK scheduled in {int(next_afk_time - time.time())} s")
     click_magic_tab()
+
 
 # ───────────────── Click-spam session ─────────────────────────────
 
@@ -570,18 +582,12 @@ def spam_session():
         if not click_magic_tab():
             log("Teleport rune not found and could not open Magic tab; skipping burst.")
             return
-        loc = safe_locate(
-            TELEPORT_IMAGE,
-            confidence=CONFIDENCE,
-            grayscale=True)
+        loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
         if not loc:
             log("Teleport rune still not found; pressing F6...")
-            pag.press('f6')
+            pag.press("f6")
             time.sleep(0.5)
-            loc = safe_locate(
-                TELEPORT_IMAGE,
-                confidence=CONFIDENCE,
-                grayscale=True)
+            loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
             if not loc:
                 log("Teleport rune still not found; skipping burst.")
                 return
@@ -593,20 +599,25 @@ def spam_session():
         maybe_outlier_event("burst")
         bezier_move(x + random.randint(-2, 2), y + random.randint(-2, 2))
         if feature("finger_hesitation"):
-            time.sleep(random.uniform(.05, .15))
-        pag.mouseDown()
-        time.sleep(lognorm_between(.010, .060))
-        pag.mouseUp()
+            time.sleep(random.uniform(0.05, 0.15))
+        # Some systems occasionally miss the down/up sequence which results in
+        # a hover without an actual click. Using the higher level click()
+        # helper provides more reliable behaviour across platforms.
+        pag.click()
         if feature("double_click"):
-            time.sleep(random.uniform(.03, .08))
+            time.sleep(random.uniform(0.03, 0.08))
             pag.click()
-        gap = gamma_between(.12, .60, 2.5) if feature("drift_click_timing") \
-            else random.uniform(.06, 1.00)
+        gap = (
+            gamma_between(0.12, 0.60, 2.5)
+            if feature("drift_click_timing")
+            else random.uniform(0.06, 1.00)
+        )
         time.sleep(gap)
         if feature("idle_wiggle"):
             idle_wiggle()
     log(f"Burst done. Rest {rest:.1f}s...")
     handle_short_rest(rest)
+
 
 # ───────────────── Hotkey thread ──────────────────────────────────
 
@@ -614,17 +625,18 @@ def spam_session():
 def hotkey_thread():
     global bot_active
     while True:
-        if keyboard.is_pressed('1'):
+        if keyboard.is_pressed("1"):
             bot_active = not bot_active
             log("Bot paused." if not bot_active else "Bot resumed.")
-            time.sleep(.4)
-        if keyboard.is_pressed('2'):
+            time.sleep(0.4)
+        if keyboard.is_pressed("2"):
             toggle_console()
-            time.sleep(.4)
-        if keyboard.is_pressed('3'):
+            time.sleep(0.4)
+        if keyboard.is_pressed("3"):
             log("Bot stopped (3).")
             os._exit(0)
-        time.sleep(.05)
+        time.sleep(0.05)
+
 
 # ───────────────── Main loop ───────────────────────────────────────
 
@@ -633,13 +645,14 @@ def main_loop():
     global loop_counter, next_weight_refresh
     while True:
         if not bot_active:
-            time.sleep(.25)
+            time.sleep(0.25)
             continue
         loop_counter += 1
         if loop_counter >= next_weight_refresh:
             refresh_weights()
-            next_weight_refresh = loop_counter + \
-                int(abs(random.gauss(LOOP_MEAN, LOOP_SD)) + 1)
+            next_weight_refresh = loop_counter + int(
+                abs(random.gauss(LOOP_MEAN, LOOP_SD)) + 1
+            )
         handle_afk()
         spam_session()
 

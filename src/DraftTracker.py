@@ -40,7 +40,7 @@ class DraftTracker:
 
     def set_cape_scale(self, factor: float) -> None:
         self._cape_scale = max(0.2, min(factor, 3.0))
-        if hasattr(self, "_root"):                 # schedule on GUI thread
+        if hasattr(self, "_root"):  # schedule on GUI thread
             self._root.after(0, self._load_cape)
 
     # ---------- ctor ----------
@@ -48,10 +48,9 @@ class DraftTracker:
         self.queue: queue.Queue[str] = queue.Queue()
         self.lines: list[str] = []
         self._cape_scale = 1.0
-        self._images: list[ImageTk.PhotoImage] = []   # <<< Fix B container
+        self._images: list[ImageTk.PhotoImage] = []  # <<< Fix B container
         x, y, w, h = self._load_geom() or self._fallback_geom()
-        threading.Thread(target=self._run_gui,
-                         args=(x, y, w, h), daemon=True).start()
+        threading.Thread(target=self._run_gui, args=(x, y, w, h), daemon=True).start()
 
     # ---------- geometry ----------
     def _load_geom(self):
@@ -67,9 +66,15 @@ class DraftTracker:
     def _save_geom(self, root):
         try:
             with open(self.SAVE_FILE, "w") as f:
-                json.dump(dict(
-                    x=root.winfo_x(), y=root.winfo_y(),
-                    w=root.winfo_width(), h=root.winfo_height()), f)
+                json.dump(
+                    dict(
+                        x=root.winfo_x(),
+                        y=root.winfo_y(),
+                        w=root.winfo_width(),
+                        h=root.winfo_height(),
+                    ),
+                    f,
+                )
         except Exception:
             pass
 
@@ -100,8 +105,13 @@ class DraftTracker:
         outer.pack(fill="both", expand=True, padx=4, pady=4)
 
         log_lbl = tk.Label(
-            outer, fg="lime", bg="black",
-            font=("Consolas", 10), justify="left", anchor="nw")
+            outer,
+            fg="lime",
+            bg="black",
+            font=("Consolas", 10),
+            justify="left",
+            anchor="nw",
+        )
         log_lbl.pack(side="left", fill="both", expand=True)
 
         self._cape_label = tk.Label(outer, bg="black")
@@ -111,8 +121,7 @@ class DraftTracker:
         ttk.Sizegrip(root).place(relx=1.0, rely=1.0, anchor="se")
 
         drag = {"x": 0, "y": 0}
-        root.bind("<ButtonPress-1>",
-                  lambda e: drag.update(x=e.x_root, y=e.y_root))
+        root.bind("<ButtonPress-1>", lambda e: drag.update(x=e.x_root, y=e.y_root))
         root.bind(
             "<B1-Motion>",
             lambda e: (
@@ -130,6 +139,7 @@ class DraftTracker:
             if isinstance(tid, int):
                 root.after_cancel(tid)
             root._save_after = root.after(350, lambda: self._save_geom(root))
+
         root.bind("<Configure>", on_conf)
 
         def poll():
@@ -146,6 +156,7 @@ class DraftTracker:
             if updated:
                 log_lbl.config(text="\n".join(self.lines))
             root.after(100, poll)
+
         poll()
 
         root.mainloop()
@@ -163,8 +174,8 @@ class DraftTracker:
             scale = target_h / img.height
             img = img.resize((int(img.width * scale), target_h), Image.LANCZOS)
             cap_img = ImageTk.PhotoImage(img, master=self._root)
-            self._images.append(cap_img)             # <<< keep reference
-            self._cape_label.image = cap_img         # keep via widget
+            self._images.append(cap_img)  # <<< keep reference
+            self._cape_label.image = cap_img  # keep via widget
             self._cape_label.config(image=cap_img)
             self.update_log("🧙‍♂️  Cape image loaded ✔")
         except Exception as e:
