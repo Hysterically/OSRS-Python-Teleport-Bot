@@ -30,6 +30,14 @@ ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 # but can be switched off in the configuration window.
 ENABLE_OVERLAY = True
 
+# Feature toggles ----------------------------------------------------
+ENABLE_OVERSHOOT = True
+ENABLE_JITTER = True
+ENABLE_VELOCITY_LIMIT = True
+CHECK_FINAL_POS = True
+LOG_CLICKS = True
+
+
 
 class _DummyOverlay:
     def update_log(self, msg: str) -> None:
@@ -255,13 +263,6 @@ JITTER_PROB = 0.1  # chance per segment to add jitter
 JITTER_PIXELS = 1  # ±pixels moved during jitter
 JITTER_DIST_THRESHOLD = 100  # only apply jitter when distance > this
 JITTER_PAUSE_MIN, JITTER_PAUSE_MAX = 0.003, 0.010
-
-# Feature toggles ----------------------------------------------------
-ENABLE_OVERSHOOT = True
-ENABLE_JITTER = True
-ENABLE_VELOCITY_LIMIT = True
-CHECK_FINAL_POS = True
-LOG_CLICKS = True
 
 # ───────────────── Runtime state ───────────────────────────────────
 bot_active = True
