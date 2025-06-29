@@ -158,6 +158,12 @@ TWEEN_FUNCS = [
     pag.easeInQuad, pag.easeOutQuad, pag.easeInOutQuad,
     pag.easeInCubic, pag.easeOutCubic, pag.easeInOutCubic]
 
+# Jitter settings for long mouse moves
+JITTER_PROB = 0.1                  # chance per segment to add jitter
+JITTER_PIXELS = 1                  # ±pixels moved during jitter
+JITTER_DIST_THRESHOLD = 100        # only apply jitter when distance > this
+JITTER_PAUSE_MIN, JITTER_PAUSE_MAX = 0.003, 0.010
+
 # ───────────────── Runtime state ───────────────────────────────────
 bot_active = True
 loop_counter = 0
@@ -299,9 +305,13 @@ def _curve(st, en):
 def fitts_time(d, w, a=.05, b=.05): return a + b * math.log2(1 + d / w)
 
 
-def bezier_move(tx, ty):
+def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
     cx, cy = pag.position()
     dist = math.hypot(tx - cx, ty - cy)
+    if jitter_prob is None:
+        jitter_prob = JITTER_PROB
+    if jitter_px is None:
+        jitter_px = JITTER_PIXELS
     use_over = random.random() < overshoot_chance and dist > 30
     if use_over:
         max_over = clamp(dist * 0.15, OVERSHOOT_MIN, OVERSHOOT_MAX)
@@ -357,6 +367,12 @@ def bezier_move(tx, ty):
         pag.moveTo(px, py,
                    duration=seg_T,
                    tween=random.choice(TWEEN_FUNCS))
+        if dist > JITTER_DIST_THRESHOLD and random.random() < jitter_prob:
+            jx = random.choice([-1, 1]) * jitter_px
+            jy = random.choice([-1, 1]) * jitter_px
+            pag.moveRel(jx, jy)
+            time.sleep(random.uniform(JITTER_PAUSE_MIN, JITTER_PAUSE_MAX))
+            pag.moveRel(-jx, -jy)
         prev_v = v
 
 
