@@ -80,6 +80,10 @@ def toggle_console():
         show_console()
 
 
+def debug(msg: str):
+    log(f"[DEBUG] {msg}")
+
+
 def log(msg: str):
     stamp = datetime.now().strftime("%H:%M:%S")
     overlay.update_log(f"{stamp} {msg}")
@@ -108,8 +112,14 @@ TELEPORT_IMAGE = OPTIONS[choice]
 
 def safe_locate(img, **kw):
     try:
-        return pag.locateOnScreen(img, **kw)
+        loc = pag.locateOnScreen(img, **kw)
+        if loc:
+            debug(f"Located {os.path.basename(img)} at {loc}")
+        else:
+            debug(f"Image {os.path.basename(img)} not found")
+        return loc
     except ImageNotFoundException:
+        debug(f"Image {os.path.basename(img)} not found (exception)")
         return None
 
 
@@ -317,6 +327,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
         jitter_px = JITTER_PIXELS
     use_over = random.random() < overshoot_chance and dist > 30
     if use_over:
+        debug(f"Overshoot move to ({tx}, {ty}) distance {dist:.1f}")
         max_over = clamp(dist * 0.15, OVERSHOOT_MIN, OVERSHOOT_MAX)
         dx = random.choice([-1, 1]) * random.uniform(OVERSHOOT_MIN, max_over)
         dy = random.choice([-1, 1]) * random.uniform(OVERSHOOT_MIN, max_over)
@@ -518,6 +529,7 @@ def handle_short_rest(rest):
 def handle_afk():
     global next_afk_time
     if time.time() < next_afk_time:
+        debug("AFK not due yet")
         return
     long_prob = random.betavariate(2.2, 5.0)
     is_long = random.random() < long_prob
@@ -532,6 +544,7 @@ def handle_afk():
             maybe_outlier_event("afk")
             time.sleep(.5)
     next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
+    debug(f"Next AFK scheduled in {int(next_afk_time - time.time())} s")
     click_magic_tab()
 
 # ───────────────── Click-spam session ─────────────────────────────
@@ -629,7 +642,6 @@ def main_loop():
 
 # ───────────────── Entry ───────────────────────────────────────────
 if __name__ == "__main__":
-    hide_console()
     threading.Thread(target=hotkey_thread, daemon=True).start()
     refresh_weights()
     next_weight_refresh = int(abs(random.gauss(LOOP_MEAN, LOOP_SD)) + 1)

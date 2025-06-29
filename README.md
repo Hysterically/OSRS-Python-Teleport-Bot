@@ -38,7 +38,8 @@ python -m src.EssayReview
 
 The script uses the `.pyw` extension so that no extra console window
 opens on Windows. If you prefer to see the console output you can
-rename it to `EssayReview.py` and launch it the same way.
+rename it to `EssayReview.py` and launch it the same way. Logs now always
+print to the terminal so you can monitor activity and debug issues.
 
 
 A prompt asks which teleport to spam-click. After selecting a teleport, the bot begins clicking. The overlay window appears near the RuneLite window and can be dragged or resized; geometry is saved in `overlay_pos.json`.
