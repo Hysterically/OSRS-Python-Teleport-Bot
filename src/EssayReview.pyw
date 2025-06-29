@@ -149,6 +149,13 @@ SEGMENT_MIN, SEGMENT_MAX = 3, 6
 OVERSHOOT_MIN, OVERSHOOT_MAX = 4, 8
 LOOP_MEAN, LOOP_SD = 10, 2
 
+# Amount of micro jitter during long mouse moves. The cursor will briefly
+# pause and move by a pixel to emulate high‑DPI noise. ``JITTER_INTERVAL``
+# controls roughly how often this occurs (in seconds of move duration) and
+# ``JITTER_MAG`` is the magnitude in pixels.
+JITTER_INTERVAL = 0.2
+JITTER_MAG = 1
+
 STATS_REST_PROB = 0.10
 STATS_REST_TEST_MODE = False
 
@@ -278,7 +285,7 @@ def _curve(st, en):
 def fitts_time(d, w, a=.05, b=.05): return a + b * math.log2(1 + d / w)
 
 
-def bezier_move(tx, ty):
+def bezier_move(tx, ty, *, jitter_interval=JITTER_INTERVAL, jitter_mag=JITTER_MAG):
     cx, cy = pag.position()
     dist = math.hypot(tx - cx, ty - cy)
     use_over = random.random() < overshoot_chance and dist > 30
@@ -300,8 +307,16 @@ def bezier_move(tx, ty):
     for (sx, sy), (px, py) in zip(path[:-1], path[1:]):
         seg = math.hypot(px - sx, py - sy)
         seg_T = seg / total * T * random.uniform(0.8, 1.2)
-        pag.moveTo(px, py, duration=clamp(seg_T, .01, .90),
+        dur = clamp(seg_T, .01, .90)
+        pag.moveTo(px, py, duration=dur,
                    tween=random.choice(TWEEN_FUNCS))
+        if jitter_interval and jitter_mag > 0:
+            jitters = int(dur / jitter_interval)
+            for _ in range(jitters):
+                time.sleep(random.uniform(0.005, 0.015))
+                pag.moveRel(random.randint(-jitter_mag, jitter_mag),
+                            random.randint(-jitter_mag, jitter_mag),
+                            duration=0)
 
 
 def idle_wiggle():
