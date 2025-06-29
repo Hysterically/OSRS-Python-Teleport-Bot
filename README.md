@@ -7,6 +7,8 @@ This project contains **EssayReview.pyw**, a teleport spam bot for Old School Ru
 - Supports Varrock, Falador and Camelot teleports (prompted at start).
 - Optional overlay HUD showing recent log lines and a magic cape image. The overlay is disabled by default; set `ENABLE_OVERLAY` in `EssayReview.pyw` to `True` to enable it.
 - Anti-ban behaviour with varying click timings and occasional idle actions.
+- Adjustable cursor speed with random jitter via `CURSOR_SPEED_MULT` and
+  `CURSOR_SPEED_JITTER` in `EssayReview.pyw`.
 - Hotkeys: **1** to pause/resume, **2** to toggle the console, **3** to quit.
 
 ## Prerequisites
