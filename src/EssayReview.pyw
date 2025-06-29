@@ -613,6 +613,8 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
             if v > allowed_v:
                 v = allowed_v
                 seg_T = seg_len / v
+                seg_T = clamp(seg_T, 0.01, 0.90)
+                v = seg_len / seg_T
         last_move_velocities.append(v)
         debug(
             f"seg to {(px, py)} len={seg_len:.1f} T={seg_T:.3f} v={v:.1f}"
