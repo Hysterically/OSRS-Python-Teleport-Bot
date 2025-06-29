@@ -55,6 +55,9 @@ CHECK_FINAL_POS = True
 # which helps diagnose missed clicks.
 LOG_CLICKS = True
 
+# Master switch for verbose debug output.
+DEBUG_LOGGING = False
+
 # Use a mouseDown → short pause → mouseUp sequence
 # for each click. This can be more reliable on some
 # systems than a regular quick click.
@@ -136,7 +139,8 @@ def toggle_console():
 
 
 def debug(msg: str):
-    log(f"[DEBUG] {msg}")
+    if DEBUG_LOGGING:
+        log(f"[DEBUG] {msg}")
 
 
 def log(msg: str):
@@ -192,6 +196,7 @@ def config_prompt():
     vel_var = tk.BooleanVar(value=ENABLE_VELOCITY_LIMIT)
     final_var = tk.BooleanVar(value=CHECK_FINAL_POS)
     log_var = tk.BooleanVar(value=LOG_CLICKS)
+    debug_var = tk.BooleanVar(value=DEBUG_LOGGING)
     robust_var = tk.BooleanVar(value=ROBUST_CLICK)
     afk_var = tk.BooleanVar(value=ENABLE_AFK)
     antiban_var = tk.BooleanVar(value=ENABLE_ANTIBAN)
@@ -231,6 +236,7 @@ def config_prompt():
     add_switch("Velocity limit (slower speed changes)", vel_var)
     add_switch("Check final position (correct drift)", final_var)
     add_switch("Log clicks (print each one)", log_var)
+    add_switch("Debug logging (verbose output)", debug_var)
     add_switch("Robust click (hold button slightly)", robust_var)
     add_switch("AFK breaks (random pauses)", afk_var)
     add_switch("Anti-ban extras (human-like mistakes)", antiban_var)
@@ -252,13 +258,14 @@ def config_prompt():
         global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
         global ENABLE_AFK, ENABLE_ANTIBAN
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
-        global ENABLE_REST, TELEPORT_CONFIDENCE
+        global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
         ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
         ENABLE_VELOCITY_LIMIT = vel_var.get()
         CHECK_FINAL_POS = final_var.get()
         LOG_CLICKS = log_var.get()
+        DEBUG_LOGGING = debug_var.get()
         ROBUST_CLICK = robust_var.get()
         ENABLE_AFK = afk_var.get()
         ENABLE_ANTIBAN = antiban_var.get()
