@@ -300,6 +300,8 @@ STATS_IMAGE = os.path.join(ASSETS_DIR, "StatsTab.png")
 MAGICLVL_IMAGE = os.path.join(ASSETS_DIR, "MagicLvl.png")
 MAGIC_TAB_IMAGE = os.path.join(ASSETS_DIR, "MagicTab.png")
 MAGIC_OPEN_IMAGE = os.path.join(ASSETS_DIR, "MagicTabOpen.png")
+PLAY_NOW_IMAGE = os.path.join(ASSETS_DIR, "PlayNow.png")
+CLICK_TO_PLAY_IMAGE = os.path.join(ASSETS_DIR, "ClickHereToPlay.png")
 
 TAB_IMAGES = [  # side-panel sprites for random flips
     os.path.join(ASSETS_DIR, "CombatTab.png"),
@@ -627,6 +629,29 @@ def click_magic_tab():
         time.sleep(0.15)
         return True
     log("⚠️ Could not open Magic tab.")
+    return False
+
+
+# ───────────────────── Login helper ───────────────────────────────
+
+
+def login(timeout: float = 15.0) -> bool:
+    """Attempt to log in by clicking Play Now then Click Here to Play."""
+    play = safe_locate(PLAY_NOW_IMAGE, confidence=CONFIDENCE, grayscale=True)
+    if not play:
+        log("⚠️ PlayNow.png not found.")
+        return False
+    bezier_move(*pag.center(play))
+    pag.click()
+    end = time.time() + timeout
+    while time.time() < end:
+        click = safe_locate(CLICK_TO_PLAY_IMAGE, confidence=CONFIDENCE, grayscale=True)
+        if click:
+            bezier_move(*pag.center(click))
+            pag.click()
+            return True
+        time.sleep(0.25)
+    log("⚠️ ClickHereToPlay.png not found.")
     return False
 
 

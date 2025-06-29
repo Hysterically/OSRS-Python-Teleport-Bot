@@ -13,6 +13,7 @@ This project contains **EssayReview.pyw**, a teleport spam bot for Old School Ru
 - Option to disable all AFK events in the configuration window.
 - New toggles let you disable stats hovering, Edge/YouTube AFK tasks
   and random tab flips if desired.
+- Simple login helper that clicks the RuneScape launcher buttons.
 - Hotkeys: **1** to pause/resume, **2** to toggle the console, **3** to quit.
 
 ## Prerequisites
