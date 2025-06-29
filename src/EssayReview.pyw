@@ -149,6 +149,8 @@ SEGMENT_MIN, SEGMENT_MAX = 3, 6
 OVERSHOOT_MIN, OVERSHOOT_MAX = 4, 8
 LOOP_MEAN, LOOP_SD = 10, 2
 
+MAX_ACCEL = 8000  # max allowed acceleration (px/s^2)
+
 STATS_REST_PROB = 0.10
 STATS_REST_TEST_MODE = False
 
@@ -163,6 +165,7 @@ next_weight_refresh = 0
 next_afk_time = 0
 anti_ban_weights = {}
 overshoot_chance = 0.30
+last_move_velocities: list[float] = []
 
 # ───────────────── Maths helpers ───────────────────────────────────
 
@@ -330,11 +333,31 @@ def bezier_move(tx, ty):
         cum += seg
         times.append(_sig(cum / total) * T)
 
-    for (px, py), t0, t1 in zip(path[1:], times[:-1], times[1:]):
+    global last_move_velocities
+    last_move_velocities = []
+    prev_v = 0.0
+    for (px, py), seg_len, t0, t1 in zip(path[1:], seg_lens, times[:-1], times[1:]):
         seg_T = (t1 - t0) * random.uniform(0.9, 1.1)
+        seg_T = clamp(seg_T, .01, .90)
+        v = seg_len / seg_T
+        if abs(v - prev_v) / seg_T > MAX_ACCEL:
+            if v > prev_v:
+                seg_T = max(seg_T, (-prev_v + math.sqrt(prev_v ** 2 + 4 * MAX_ACCEL * seg_len)) / (2 * MAX_ACCEL))
+            else:
+                disc = prev_v ** 2 - 4 * MAX_ACCEL * seg_len
+                if disc > 0 and prev_v > 0:
+                    seg_T = max(seg_T, (prev_v + math.sqrt(disc)) / (2 * MAX_ACCEL))
+                elif prev_v > 0:
+                    seg_T = max(seg_T, seg_len / prev_v)
+                else:
+                    seg_T = max(seg_T, math.sqrt(seg_len / MAX_ACCEL))
+            seg_T = clamp(seg_T, .01, .90)
+            v = seg_len / seg_T
+        last_move_velocities.append(v)
         pag.moveTo(px, py,
-                   duration=clamp(seg_T, .01, .90),
+                   duration=seg_T,
                    tween=random.choice(TWEEN_FUNCS))
+        prev_v = v
 
 
 def idle_wiggle():
