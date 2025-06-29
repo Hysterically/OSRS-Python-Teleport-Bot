@@ -97,6 +97,10 @@ class _DummyOverlay:
 # the configuration window so the user can disable it before it starts.
 overlay: object = _DummyOverlay()
 
+# Default confidence for image recognition
+CONFIDENCE = 0.90
+TELEPORT_CONFIDENCE = CONFIDENCE
+
 
 # ─────────────────── Console visibility helpers ───────────────────
 console_visible = True
@@ -335,8 +339,6 @@ TAB_IMAGES = [  # side-panel sprites for random flips
 ]
 
 # ───────────────── Confidence levels ───────────────────────────────
-CONFIDENCE = 0.90
-TELEPORT_CONFIDENCE = CONFIDENCE
 STATS_CONFIDENCE = 0.80
 OPEN_CONFIDENCE = 0.85
 # Lowered threshold for locating MagicTab.png
