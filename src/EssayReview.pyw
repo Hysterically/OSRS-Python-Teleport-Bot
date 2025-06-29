@@ -150,6 +150,7 @@ OVERSHOOT_MIN, OVERSHOOT_MAX = 4, 8
 LOOP_MEAN, LOOP_SD = 10, 2
 
 MAX_ACCEL = 8000  # max allowed acceleration (px/s^2)
+SMOOTH_STOP_DIST = 40  # distance (px) to begin slowing for final stop
 
 STATS_REST_PROB = 0.10
 STATS_REST_TEST_MODE = False
@@ -346,7 +347,9 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
     global last_move_velocities
     last_move_velocities = []
     prev_v = 0.0
+    dist_done = 0.0
     for (px, py), seg_len, t0, t1 in zip(path[1:], seg_lens, times[:-1], times[1:]):
+        remaining = total - dist_done
         seg_T = (t1 - t0) * random.uniform(0.9, 1.1)
         seg_T = clamp(seg_T, .01, .90)
         v = seg_len / seg_T
@@ -363,6 +366,11 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
                     seg_T = max(seg_T, math.sqrt(seg_len / MAX_ACCEL))
             seg_T = clamp(seg_T, .01, .90)
             v = seg_len / seg_T
+        if remaining < SMOOTH_STOP_DIST and prev_v > 0:
+            allowed_v = prev_v * max(remaining / SMOOTH_STOP_DIST, 0.1)
+            if v > allowed_v:
+                v = allowed_v
+                seg_T = seg_len / v
         last_move_velocities.append(v)
         pag.moveTo(px, py,
                    duration=seg_T,
@@ -374,6 +382,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
             time.sleep(random.uniform(JITTER_PAUSE_MIN, JITTER_PAUSE_MAX))
             pag.moveRel(-jx, -jy)
         prev_v = v
+        dist_done += seg_len
 
 
 def idle_wiggle():
