@@ -132,7 +132,8 @@ TAB_IMAGES = [   # side-panel sprites for random flips
 CONFIDENCE = 0.90
 STATS_CONFIDENCE = 0.80
 OPEN_CONFIDENCE = 0.85
-MAGIC_TAB_CONFIDENCE = 0.88
+# Lowered threshold for locating MagicTab.png
+MAGIC_TAB_CONFIDENCE = 0.80
 
 # ───────────────── Behaviour constants ────────────────────────────
 SPAM_MIN, SPAM_MAX = 1, 70
