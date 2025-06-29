@@ -242,15 +242,20 @@ def maybe_outlier_event(ctx: str):
             pag.click()
             time.sleep(0.3)
     elif event == "scroll_spam":
+        cx, cy = pag.position()
         for _ in range(random.randint(3, 7)):
+            off_x = random.randint(-20, 20)
+            off_y = random.randint(-20, 20)
+            bezier_move(cx + off_x, cy + off_y)
             pag.scroll(random.randint(-300, 300))
-            time.sleep(.1)
+            time.sleep(random.uniform(.08, .18))
     elif event == "camera_circle":
         cx, cy = pag.position()
         r = random.randint(20, 40)
         for a in range(0, 360, 45):
-            pag.moveTo(cx + int(r * math.cos(math.radians(a))),
-                       cy + int(r * math.sin(math.radians(a))), duration=.05)
+            tx = cx + int(r * math.cos(math.radians(a)))
+            ty = cy + int(r * math.sin(math.radians(a)))
+            bezier_move(tx, ty)
 
 # ───────────────── Mouse helpers (Fitts+Bézier) ───────────────────
 
