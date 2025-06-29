@@ -8,6 +8,7 @@
 #   loses the image handle (eliminates “pyimageX doesn’t exist” crashes)
 # =============================================================================
 import win32gui
+import win32con
 import pyautogui as pag
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -50,7 +51,12 @@ class DraftTracker:
         self._cape_scale = 1.0
         self._images: list[ImageTk.PhotoImage] = []  # <<< Fix B container
         x, y, w, h = self._load_geom() or self._fallback_geom()
-        threading.Thread(target=self._run_gui, args=(x, y, w, h), daemon=True).start()
+        thread = threading.Thread(
+            target=self._run_gui,
+            args=(x, y, w, h),
+            daemon=True,
+        )
+        thread.start()
 
     # ---------- geometry ----------
     def _load_geom(self):
@@ -98,6 +104,13 @@ class DraftTracker:
         root.overrideredirect(True)
         root.attributes("-topmost", True)
         root.attributes("-alpha", self.OPACITY)
+        hwnd = root.winfo_id()
+        exstyle = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
+        win32gui.SetWindowLong(
+            hwnd,
+            win32con.GWL_EXSTYLE,
+            exstyle | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT,
+        )
         root.geometry(f"{w0}x{h0}+{x0}+{y0}")
         root.configure(bg="black")
 
@@ -121,7 +134,10 @@ class DraftTracker:
         ttk.Sizegrip(root).place(relx=1.0, rely=1.0, anchor="se")
 
         drag = {"x": 0, "y": 0}
-        root.bind("<ButtonPress-1>", lambda e: drag.update(x=e.x_root, y=e.y_root))
+        root.bind(
+            "<ButtonPress-1>",
+            lambda e: drag.update(x=e.x_root, y=e.y_root),
+        )
         root.bind(
             "<B1-Motion>",
             lambda e: (
