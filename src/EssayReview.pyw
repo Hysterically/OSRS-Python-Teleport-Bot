@@ -98,7 +98,7 @@ class _DummyOverlay:
 overlay: object = _DummyOverlay()
 
 # Default confidence for image recognition
-CONFIDENCE = 0.90
+CONFIDENCE = 0.80
 TELEPORT_CONFIDENCE = CONFIDENCE
 
 
