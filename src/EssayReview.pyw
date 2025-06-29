@@ -764,25 +764,19 @@ def handle_afk():
     debug(f"Next AFK scheduled in {int(next_afk_time - time.time())} s")
     click_magic_tab()
 
-
 # ───────────────── Click-spam session ─────────────────────────────
-
-
 def spam_session():
     burst = gaussian_between(SPAM_MIN, SPAM_MAX)
-    rest = gaussian_between(REST_MIN, REST_MAX)
+    rest  = gaussian_between(REST_MIN, REST_MAX)
 
-    # Always click the Magic tab before attempting to locate the teleport.
-    # Sometimes random tab flips leave another tab active which prevents the
-    # teleport icon from being found. Clicking the Magic tab each session is
-    # cheap and ensures the spellbook is visible.
+    # Always start by opening the Magic tab
     click_magic_tab()
 
     loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
     if not loc:
         log("Teleport rune not found; clicking Magic tab...")
         if not click_magic_tab():
-            log("Teleport rune not found and could not open Magic tab; skipping burst.")
+            log("⚠️ Could not open Magic tab; skipping burst.")
             return
         loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
         if not loc:
@@ -793,37 +787,49 @@ def spam_session():
             if not loc:
                 log("Teleport rune still not found; skipping burst.")
                 return
+
+    # Centre plus downward nudge
     x, y = pag.center(loc)
-    log(f"Click burst {burst:.1f}s at {(x, y)}")
+    y    += 3
+    log(f"Click burst {burst:.1f}s at ({x}, {y})")
+
     end = time.time() + burst
     while time.time() < end and bot_active:
         handle_afk()
         maybe_outlier_event("burst")
+
+        # add a little randomness around the centre point
         target_x = x + random.randint(-2, 2)
         target_y = y + random.randint(-2, 2)
         bezier_move(target_x, target_y)
+
+        # if the cursor drifted, re-align and force a click
         if CHECK_FINAL_POS:
             fx, fy = pag.position()
             if math.hypot(fx - target_x, fy - target_y) > 3:
-                debug(
-                    f"cursor drifted to {(fx, fy)} expected {(target_x, target_y)}"
-                )
+                debug(f"cursor drifted to {(fx, fy)} expected {(target_x, target_y)}")
                 pag.moveTo(target_x, target_y)
+                pag.click()
+                continue
+
         if feature("finger_hesitation"):
             time.sleep(random.uniform(0.05, 0.15))
-        # Some systems occasionally miss the down/up sequence which results in
-        # a hover without an actual click. Using the higher level click()
-        # helper provides more reliable behaviour across platforms.
+
         if LOG_CLICKS:
             debug(f"click at {pag.position()}")
+
+        # robust click if enabled, else normal click
         if ROBUST_CLICK:
             pag.mouseDown()
             time.sleep(random.uniform(CLICK_HOLD_MIN, CLICK_HOLD_MAX))
             pag.mouseUp()
         else:
             pag.click()
+
         if LOG_CLICKS:
             debug("click issued")
+
+        # if the rune is still present, retry click once
         if CHECK_FINAL_POS:
             chk = safe_locate(
                 TELEPORT_IMAGE,
@@ -834,21 +840,26 @@ def spam_session():
             if chk:
                 debug("click retry")
                 pag.click()
+
         if feature("double_click"):
             time.sleep(random.uniform(0.03, 0.08))
             if LOG_CLICKS:
                 debug("double click")
             pag.click()
+
         gap = (
             gamma_between(0.12, 0.60, 2.5)
             if feature("drift_click_timing")
             else random.uniform(0.06, 1.00)
         )
         time.sleep(gap)
+
         if feature("idle_wiggle"):
             idle_wiggle()
+
     log(f"Burst done. Rest {rest:.1f}s...")
     handle_short_rest(rest)
+
 
 
 # ───────────────── Hotkey thread ──────────────────────────────────
