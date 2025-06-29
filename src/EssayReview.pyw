@@ -235,12 +235,20 @@ def config_prompt():
     add_switch("Random tab flips when idle", tabflip_var)
     add_switch("Rest between bursts", rest_var)
 
+    tk.Label(root, text="Teleport confidence:", bg=bg, fg=fg).pack(
+        anchor="w", padx=10, pady=(10, 0)
+    )
+    tele_conf_var = tk.DoubleVar(value=TELEPORT_CONFIDENCE)
+    ttk.Entry(root, textvariable=tele_conf_var, width=5).pack(
+        anchor="w", padx=20
+    )
+
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
         global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
         global ENABLE_AFK, ENABLE_ANTIBAN
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
-        global ENABLE_REST
+        global ENABLE_REST, TELEPORT_CONFIDENCE
         ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
@@ -254,6 +262,10 @@ def config_prompt():
         ENABLE_BROWSER_AFK = browser_var.get()
         ENABLE_TAB_FLIP = tabflip_var.get()
         ENABLE_REST = rest_var.get()
+        try:
+            TELEPORT_CONFIDENCE = max(0.0, min(1.0, float(tele_conf_var.get())))
+        except Exception:
+            TELEPORT_CONFIDENCE = CONFIDENCE
         choice = tele_var.get()
         root.destroy()
 
@@ -324,6 +336,7 @@ TAB_IMAGES = [  # side-panel sprites for random flips
 
 # ───────────────── Confidence levels ───────────────────────────────
 CONFIDENCE = 0.90
+TELEPORT_CONFIDENCE = CONFIDENCE
 STATS_CONFIDENCE = 0.80
 OPEN_CONFIDENCE = 0.85
 # Lowered threshold for locating MagicTab.png
@@ -453,7 +466,9 @@ def maybe_outlier_event(ctx: str):
         time.sleep(random.uniform(0.3, 0.8))
         bezier_move(*start)
     elif event == "off_click":
-        loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
+        loc = safe_locate(
+            TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
+        )
         if loc:
             x, y = pag.center(loc)
             dx = random.randint(25, 80) * random.choice([-1, 1])
@@ -805,18 +820,24 @@ def spam_session():
     # Always start by opening the Magic tab
     click_magic_tab()
 
-    loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
+    loc = safe_locate(
+        TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
+    )
     if not loc:
         log("Teleport rune not found; clicking Magic tab...")
         if not click_magic_tab():
             log("⚠️ Could not open Magic tab; skipping burst.")
             return
-        loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
+        loc = safe_locate(
+            TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
+        )
         if not loc:
             log("Teleport rune still not found; pressing F6...")
             pag.press("f6")
             time.sleep(0.5)
-            loc = safe_locate(TELEPORT_IMAGE, confidence=CONFIDENCE, grayscale=True)
+            loc = safe_locate(
+                TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
+            )
             if not loc:
                 log("Teleport rune still not found; skipping burst.")
                 return
@@ -866,7 +887,7 @@ def spam_session():
         if CHECK_FINAL_POS:
             chk = safe_locate(
                 TELEPORT_IMAGE,
-                confidence=CONFIDENCE,
+                confidence=TELEPORT_CONFIDENCE,
                 grayscale=True,
                 region=(x - 20, y - 20, 40, 40),
             )
