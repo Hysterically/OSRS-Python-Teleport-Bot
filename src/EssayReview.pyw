@@ -154,9 +154,25 @@ def config_prompt():
 
     root = tk.Tk()
     root.title("Bot Configuration")
+    # ---- dark mode colours ----
+    bg = "#2b2b2b"
+    fg = "#ffffff"
+    root.configure(bg=bg)
+    style = ttk.Style(root)
+    try:
+        style.theme_use("clam")
+    except Exception:
+        pass
+    style.configure("TFrame", background=bg)
+    style.configure("TLabel", background=bg, foreground=fg)
+    style.configure("TRadiobutton", background=bg, foreground=fg)
+    style.configure("TCheckbutton", background=bg, foreground=fg)
+    style.configure("TButton", background="#444444", foreground=fg)
 
     tele_var = tk.StringVar(value=list(OPTIONS.keys())[0])
-    tk.Label(root, text="Select teleport:").pack(anchor="w", padx=10, pady=(10, 0))
+    tk.Label(root, text="Select teleport:", bg=bg, fg=fg).pack(
+        anchor="w", padx=10, pady=(10, 0)
+    )
     for opt in OPTIONS.keys():
         ttk.Radiobutton(root, text=opt, value=opt, variable=tele_var).pack(
             anchor="w", padx=20
@@ -175,7 +191,7 @@ def config_prompt():
     browser_var = tk.BooleanVar(value=ENABLE_BROWSER_AFK)
     tabflip_var = tk.BooleanVar(value=ENABLE_TAB_FLIP)
 
-    tk.Label(root, text="Options:").pack(anchor="w", padx=10, pady=(10, 0))
+    tk.Label(root, text="Options:", bg=bg, fg=fg).pack(anchor="w", padx=10, pady=(10, 0))
 
     def add_switch(label_text: str, var: tk.BooleanVar) -> None:
         frame = ttk.Frame(root)
@@ -192,6 +208,11 @@ def config_prompt():
             indicatoron=False,
             width=4,
             command=_toggle,
+            bg=bg,
+            fg=fg,
+            activebackground="#444444",
+            activeforeground=fg,
+            selectcolor=bg,
         ).pack(side="right", padx=(10, 0))
         frame.pack(anchor="w", padx=20, pady=2)
 
