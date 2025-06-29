@@ -142,6 +142,9 @@ CLICK_MIN_GAP, CLICK_MAX_GAP = 0.06, 1.00
 CLICK_HOLD_MIN, CLICK_HOLD_MAX = 0.010, 0.060
 AFK_MIN_SECS, AFK_MAX_SECS = 1800, 5400
 SEGMENT_MIN, SEGMENT_MAX = 3, 6
+# Overshoot range for mouse movement (pixels). When the cursor distance is
+# small the overshoot amount is scaled down so movements between adjacent tabs
+# don't appear robotic.
 OVERSHOOT_MIN, OVERSHOOT_MAX = 4, 8
 LOOP_MEAN, LOOP_SD = 10, 2
 
@@ -271,9 +274,12 @@ def fitts_time(d, w, a=.05, b=.05): return a + b * math.log2(1 + d / w)
 
 def bezier_move(tx, ty):
     cx, cy = pag.position()
-    if random.random() < overshoot_chance:
-        dx = random.choice([-1, 1]) * random.randint(4, 8)
-        dy = random.choice([-1, 1]) * random.randint(4, 8)
+    dist = math.hypot(tx - cx, ty - cy)
+    use_over = random.random() < overshoot_chance and dist > 30
+    if use_over:
+        max_over = clamp(dist * 0.15, OVERSHOOT_MIN, OVERSHOOT_MAX)
+        dx = random.choice([-1, 1]) * random.uniform(OVERSHOOT_MIN, max_over)
+        dy = random.choice([-1, 1]) * random.uniform(OVERSHOOT_MIN, max_over)
         path = _curve((cx, cy), (tx + dx, ty + dy)) + \
             _curve((tx + dx, ty + dy), (tx, ty))
     else:
