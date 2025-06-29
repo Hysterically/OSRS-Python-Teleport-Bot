@@ -147,10 +147,6 @@ SEGMENT_MIN, SEGMENT_MAX = 3, 6
 # small the overshoot amount is scaled down so movements between adjacent tabs
 # don't appear robotic.
 OVERSHOOT_MIN, OVERSHOOT_MAX = 4, 8
-# Cursor speed controls: adjust CURSOR_SPEED_MULT to slow or speed up
-# movement and CURSOR_SPEED_JITTER for per-move variation.
-CURSOR_SPEED_MULT = 1.0       # >1.0 slows movement, <1.0 speeds it up
-CURSOR_SPEED_JITTER = 0.5     # ±50% randomisation per move
 LOOP_MEAN, LOOP_SD = 10, 2
 
 STATS_REST_PROB = 0.10
@@ -299,13 +295,12 @@ def bezier_move(tx, ty):
                 for (sx, sy), (px, py) in zip(path[:-1], path[1:])) or 1
     T = fitts_time(total, W, a=random.uniform(.04, .06),
                    b=random.uniform(.04, .07))
-    # Apply configurable multiplier with random jitter for variation
-    jitter_lo = CURSOR_SPEED_MULT * (1 - CURSOR_SPEED_JITTER)
-    jitter_hi = CURSOR_SPEED_MULT * (1 + CURSOR_SPEED_JITTER)
-    T *= random.uniform(jitter_lo, jitter_hi)
+    # Add built-in random variation and slower baseline
+    T *= random.uniform(1.6, 2.4)
     for (sx, sy), (px, py) in zip(path[:-1], path[1:]):
         seg = math.hypot(px - sx, py - sy)
-        pag.moveTo(px, py, duration=clamp(seg / total * T, .01, .60),
+        seg_T = seg / total * T * random.uniform(0.8, 1.2)
+        pag.moveTo(px, py, duration=clamp(seg_T, .01, .90),
                    tween=random.choice(TWEEN_FUNCS))
 
 
