@@ -261,6 +261,23 @@ def maybe_outlier_event(ctx: str):
 # ───────────────── Mouse helpers (Fitts+Bézier) ───────────────────
 
 
+def _smooth_path(points: list[tuple[int, int]], radius: int = 2):
+    """Apply a simple moving average to smooth angle changes."""
+    if radius <= 0 or len(points) < 3:
+        return points
+    smoothed: list[tuple[int, int]] = []
+    n = len(points)
+    for i in range(n):
+        s0 = max(0, i - radius)
+        s1 = min(n, i + radius + 1)
+        xs = [p[0] for p in points[s0:s1]]
+        ys = [p[1] for p in points[s0:s1]]
+        smoothed.append((int(sum(xs) / len(xs)), int(sum(ys) / len(ys))))
+    smoothed[0] = points[0]
+    smoothed[-1] = points[-1]
+    return smoothed
+
+
 def _curve(st, en):
     sx, sy = st
     ex, ey = en
@@ -272,6 +289,7 @@ def _curve(st, en):
         cy = sy + (ey - sy) * t + off
         pts.append((int((1 - t) * sx + t * cx), int((1 - t) * sy + t * cy)))
     pts.append((ex, ey))
+    pts = _smooth_path(pts)
     return pts
 
 
@@ -290,6 +308,7 @@ def bezier_move(tx, ty):
             _curve((tx + dx, ty + dy), (tx, ty))
     else:
         path = _curve((cx, cy), (tx, ty))
+    path = _smooth_path(path)
     W = random.uniform(32, 48)
     seg_lens = [math.hypot(px - sx, py - sy)
                 for (sx, sy), (px, py) in zip(path[:-1], path[1:])]
