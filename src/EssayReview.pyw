@@ -412,6 +412,9 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
         prev_v = v
         dist_done += seg_len
 
+    # ensure the cursor ends exactly on the target
+    pag.moveTo(tx, ty)
+
 
 def idle_wiggle():
     x, y = pag.position()
