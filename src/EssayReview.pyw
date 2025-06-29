@@ -67,6 +67,18 @@ ENABLE_AFK = True
 # Enable random anti-ban extras like double clicks or cursor wiggles.
 ENABLE_ANTIBAN = True
 
+# Additional optional behaviours
+# When enabled the bot may move the mouse over the stats tab during
+# short rests. Disabling this prevents any stats-hover actions.
+ENABLE_STATS_HOVER = True
+
+# During some breaks the bot scrolls a random Edge/YouTube window.
+# This can be turned off if no browser is running or it causes issues.
+ENABLE_BROWSER_AFK = True
+
+# If enabled the bot flips through random side tabs while idling.
+ENABLE_TAB_FLIP = True
+
 
 
 class _DummyOverlay:
@@ -159,6 +171,9 @@ def config_prompt():
     robust_var = tk.BooleanVar(value=ROBUST_CLICK)
     afk_var = tk.BooleanVar(value=ENABLE_AFK)
     antiban_var = tk.BooleanVar(value=ENABLE_ANTIBAN)
+    stats_var = tk.BooleanVar(value=ENABLE_STATS_HOVER)
+    browser_var = tk.BooleanVar(value=ENABLE_BROWSER_AFK)
+    tabflip_var = tk.BooleanVar(value=ENABLE_TAB_FLIP)
 
     tk.Label(root, text="Options:").pack(anchor="w", padx=10, pady=(10, 0))
     tk.Checkbutton(root, text="Show overlay (info window)", variable=overlay_var).pack(
@@ -188,11 +203,21 @@ def config_prompt():
     tk.Checkbutton(root, text="Anti-ban extras (human-like mistakes)", variable=antiban_var).pack(
         anchor="w", padx=20
     )
+    tk.Checkbutton(root, text="Hover stats during rests", variable=stats_var).pack(
+        anchor="w", padx=20
+    )
+    tk.Checkbutton(root, text="Use Edge/YouTube during AFK", variable=browser_var).pack(
+        anchor="w", padx=20
+    )
+    tk.Checkbutton(root, text="Random tab flips when idle", variable=tabflip_var).pack(
+        anchor="w", padx=20
+    )
 
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
         global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
-        global ENABLE_AFK, ENABLE_ANTIBAN, choice
+        global ENABLE_AFK, ENABLE_ANTIBAN
+        global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
@@ -202,6 +227,9 @@ def config_prompt():
         ROBUST_CLICK = robust_var.get()
         ENABLE_AFK = afk_var.get()
         ENABLE_ANTIBAN = antiban_var.get()
+        ENABLE_STATS_HOVER = stats_var.get()
+        ENABLE_BROWSER_AFK = browser_var.get()
+        ENABLE_TAB_FLIP = tabflip_var.get()
         choice = tele_var.get()
         root.destroy()
 
@@ -671,10 +699,12 @@ def stats_hover(dur) -> bool:
 
 def default_rest(dur):
     ch = random.random()
-    if ch < 0.60 and click_edge_youtube():
+    if ENABLE_BROWSER_AFK and ch < 0.60 and click_edge_youtube():
         scroll_loop(dur)
-    else:
+    elif ENABLE_TAB_FLIP:
         random_tab_loop(dur)
+    else:
+        time.sleep(dur)
     click_magic_tab()
 
 
@@ -683,7 +713,7 @@ def handle_short_rest(rest):
         return
     log(f"Short AFK task for {rest:.1f}s")
     maybe_outlier_event("rest")
-    if STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB:
+    if ENABLE_STATS_HOVER and (STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB):
         if not stats_hover(rest):
             default_rest(rest)
     else:
@@ -705,8 +735,10 @@ def handle_afk():
     dur = gamma_between(53, 300, 2.1) if is_long else gamma_between(1, 47, 2.1)
     log(f"{'Long' if is_long else 'Short'} AFK: {int(dur)} s")
     ch = random.random()
-    if (ch < 0.60 if is_long else ch < 0.50) and click_edge_youtube():
+    if ENABLE_BROWSER_AFK and (ch < 0.60 if is_long else ch < 0.50) and click_edge_youtube():
         scroll_loop(dur)
+    elif ENABLE_TAB_FLIP:
+        random_tab_loop(dur)
     else:
         end = time.time() + dur
         while time.time() < end and bot_active:
