@@ -64,6 +64,9 @@ ROBUST_CLICK = False
 # never perform random idle breaks.
 ENABLE_AFK = True
 
+# Enable random anti-ban extras like double clicks or cursor wiggles.
+ENABLE_ANTIBAN = True
+
 
 
 class _DummyOverlay:
@@ -155,37 +158,41 @@ def config_prompt():
     log_var = tk.BooleanVar(value=LOG_CLICKS)
     robust_var = tk.BooleanVar(value=ROBUST_CLICK)
     afk_var = tk.BooleanVar(value=ENABLE_AFK)
+    antiban_var = tk.BooleanVar(value=ENABLE_ANTIBAN)
 
     tk.Label(root, text="Options:").pack(anchor="w", padx=10, pady=(10, 0))
-    tk.Checkbutton(root, text="Enable overlay", variable=overlay_var).pack(
+    tk.Checkbutton(root, text="Show overlay (info window)", variable=overlay_var).pack(
         anchor="w", padx=20
     )
-    tk.Checkbutton(root, text="Mouse overshoot", variable=over_var).pack(
+    tk.Checkbutton(root, text="Mouse overshoot (aim past target)", variable=over_var).pack(
         anchor="w", padx=20
     )
-    tk.Checkbutton(root, text="Mouse jitter", variable=jitter_var).pack(
+    tk.Checkbutton(root, text="Mouse jitter (tiny wiggles)", variable=jitter_var).pack(
         anchor="w", padx=20
     )
-    tk.Checkbutton(root, text="Velocity limit", variable=vel_var).pack(
+    tk.Checkbutton(root, text="Velocity limit (slower speed changes)", variable=vel_var).pack(
         anchor="w", padx=20
     )
-    tk.Checkbutton(root, text="Check final position", variable=final_var).pack(
+    tk.Checkbutton(root, text="Check final position (correct drift)", variable=final_var).pack(
         anchor="w", padx=20
     )
-    tk.Checkbutton(root, text="Log clicks", variable=log_var).pack(
+    tk.Checkbutton(root, text="Log clicks (print each one)", variable=log_var).pack(
         anchor="w", padx=20
     )
-    tk.Checkbutton(root, text="Robust click", variable=robust_var).pack(
+    tk.Checkbutton(root, text="Robust click (hold button slightly)", variable=robust_var).pack(
         anchor="w", padx=20
     )
-    tk.Checkbutton(root, text="Enable AFK events", variable=afk_var).pack(
+    tk.Checkbutton(root, text="AFK breaks (random pauses)", variable=afk_var).pack(
+        anchor="w", padx=20
+    )
+    tk.Checkbutton(root, text="Anti-ban extras (human-like mistakes)", variable=antiban_var).pack(
         anchor="w", padx=20
     )
 
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
         global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
-        global ENABLE_AFK, choice
+        global ENABLE_AFK, ENABLE_ANTIBAN, choice
         ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
@@ -194,6 +201,7 @@ def config_prompt():
         LOG_CLICKS = log_var.get()
         ROBUST_CLICK = robust_var.get()
         ENABLE_AFK = afk_var.get()
+        ENABLE_ANTIBAN = antiban_var.get()
         choice = tele_var.get()
         root.destroy()
 
@@ -369,6 +377,8 @@ def refresh_weights():
 
 
 def feature(k):
+    if not ENABLE_ANTIBAN:
+        return False
     return random.random() < anti_ban_weights.get(k, 0)
 
 
@@ -376,6 +386,8 @@ def feature(k):
 
 
 def maybe_outlier_event(ctx: str):
+    if not ENABLE_ANTIBAN:
+        return
     odds = {"burst": 0.0006, "rest": 0.0008, "afk": 0.0010}
     if random.random() > odds.get(ctx, 0.0006):
         return
