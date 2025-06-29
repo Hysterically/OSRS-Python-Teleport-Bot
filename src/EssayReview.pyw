@@ -8,7 +8,11 @@ import pygetwindow as gw
 from .DraftTracker import DraftTracker
 import pyautogui as pag
 from pyautogui import ImageNotFoundException
-import keyboard
+try:
+    import keyboard
+except Exception:  # pragma: no cover - keyboard may be unavailable
+    from types import SimpleNamespace
+    keyboard = SimpleNamespace(is_pressed=lambda *_a, **_k: False)
 import time
 import random
 import threading
@@ -55,6 +59,10 @@ LOG_CLICKS = True
 # for each click. This can be more reliable on some
 # systems than a regular quick click.
 ROBUST_CLICK = False
+
+# Toggle long and short AFK events. When disabled the bot will
+# never perform random idle breaks.
+ENABLE_AFK = True
 
 
 
@@ -146,6 +154,7 @@ def config_prompt():
     final_var = tk.BooleanVar(value=CHECK_FINAL_POS)
     log_var = tk.BooleanVar(value=LOG_CLICKS)
     robust_var = tk.BooleanVar(value=ROBUST_CLICK)
+    afk_var = tk.BooleanVar(value=ENABLE_AFK)
 
     tk.Label(root, text="Options:").pack(anchor="w", padx=10, pady=(10, 0))
     tk.Checkbutton(root, text="Enable overlay", variable=overlay_var).pack(
@@ -169,10 +178,14 @@ def config_prompt():
     tk.Checkbutton(root, text="Robust click", variable=robust_var).pack(
         anchor="w", padx=20
     )
+    tk.Checkbutton(root, text="Enable AFK events", variable=afk_var).pack(
+        anchor="w", padx=20
+    )
 
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
-        global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK, choice
+        global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
+        global ENABLE_AFK, choice
         ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
@@ -180,6 +193,7 @@ def config_prompt():
         CHECK_FINAL_POS = final_var.get()
         LOG_CLICKS = log_var.get()
         ROBUST_CLICK = robust_var.get()
+        ENABLE_AFK = afk_var.get()
         choice = tele_var.get()
         root.destroy()
 
@@ -347,7 +361,10 @@ def refresh_weights():
         "finger_hesitation": clamp(random.gauss(0.25, 0.1), 0, 0.6),
     }
     overshoot_chance = clamp(random.gauss(0.3, 0.08), 0.1, 0.5)
-    next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
+    if ENABLE_AFK:
+        next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
+    else:
+        next_afk_time = float("inf")
     log("Anti-ban settings updated.")
 
 
@@ -666,6 +683,8 @@ def handle_short_rest(rest):
 
 def handle_afk():
     global next_afk_time
+    if not ENABLE_AFK:
+        return
     if time.time() < next_afk_time:
         debug("AFK not due yet")
         return
