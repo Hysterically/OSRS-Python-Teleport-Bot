@@ -11,6 +11,7 @@ This project contains **EssayReview.pyw**, a teleport spam bot for Old School Ru
 - Optional "robust click" mode that holds the mouse
   button down briefly so clicks aren't missed on some setups.
 - Option to disable all AFK events in the configuration window.
+- Toggle to enable verbose debug logging when troubleshooting.
 - New toggles let you disable stats hovering, Edge/YouTube AFK tasks
   random tab flips and the short rest between bursts if desired.
 - Simple login helper that clicks the RuneScape launcher buttons.
