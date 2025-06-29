@@ -176,42 +176,37 @@ def config_prompt():
     tabflip_var = tk.BooleanVar(value=ENABLE_TAB_FLIP)
 
     tk.Label(root, text="Options:").pack(anchor="w", padx=10, pady=(10, 0))
-    tk.Checkbutton(root, text="Show overlay (info window)", variable=overlay_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Mouse overshoot (aim past target)", variable=over_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Mouse jitter (tiny wiggles)", variable=jitter_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Velocity limit (slower speed changes)", variable=vel_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Check final position (correct drift)", variable=final_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Log clicks (print each one)", variable=log_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Robust click (hold button slightly)", variable=robust_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="AFK breaks (random pauses)", variable=afk_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Anti-ban extras (human-like mistakes)", variable=antiban_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Hover stats during rests", variable=stats_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Use Edge/YouTube during AFK", variable=browser_var).pack(
-        anchor="w", padx=20
-    )
-    tk.Checkbutton(root, text="Random tab flips when idle", variable=tabflip_var).pack(
-        anchor="w", padx=20
-    )
+
+    def add_switch(label_text: str, var: tk.BooleanVar) -> None:
+        frame = ttk.Frame(root)
+        ttk.Label(frame, text=label_text).pack(side="left")
+        btn_text = tk.StringVar(value="On" if var.get() else "Off")
+
+        def _toggle() -> None:
+            btn_text.set("On" if var.get() else "Off")
+
+        tk.Checkbutton(
+            frame,
+            variable=var,
+            textvariable=btn_text,
+            indicatoron=False,
+            width=4,
+            command=_toggle,
+        ).pack(side="right", padx=(10, 0))
+        frame.pack(anchor="w", padx=20, pady=2)
+
+    add_switch("Show overlay (info window)", overlay_var)
+    add_switch("Mouse overshoot (aim past target)", over_var)
+    add_switch("Mouse jitter (tiny wiggles)", jitter_var)
+    add_switch("Velocity limit (slower speed changes)", vel_var)
+    add_switch("Check final position (correct drift)", final_var)
+    add_switch("Log clicks (print each one)", log_var)
+    add_switch("Robust click (hold button slightly)", robust_var)
+    add_switch("AFK breaks (random pauses)", afk_var)
+    add_switch("Anti-ban extras (human-like mistakes)", antiban_var)
+    add_switch("Hover stats during rests", stats_var)
+    add_switch("Use Edge/YouTube during AFK", browser_var)
+    add_switch("Random tab flips when idle", tabflip_var)
 
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
