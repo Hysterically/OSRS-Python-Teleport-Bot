@@ -295,9 +295,12 @@ def bezier_move(tx, ty):
                 for (sx, sy), (px, py) in zip(path[:-1], path[1:])) or 1
     T = fitts_time(total, W, a=random.uniform(.04, .06),
                    b=random.uniform(.04, .07))
+    # Add built-in random variation and slower baseline
+    T *= random.uniform(1.6, 2.4)
     for (sx, sy), (px, py) in zip(path[:-1], path[1:]):
         seg = math.hypot(px - sx, py - sy)
-        pag.moveTo(px, py, duration=clamp(seg / total * T, .01, .40),
+        seg_T = seg / total * T * random.uniform(0.8, 1.2)
+        pag.moveTo(px, py, duration=clamp(seg_T, .01, .90),
                    tween=random.choice(TWEEN_FUNCS))
 
 
