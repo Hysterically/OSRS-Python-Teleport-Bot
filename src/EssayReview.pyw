@@ -91,7 +91,9 @@ def log(msg: str):
 
 def config_prompt():
     """Interactive window for teleport and feature settings."""
-    if "PYTEST_CURRENT_TEST" in os.environ or not os.environ.get("DISPLAY"):
+    if "PYTEST_CURRENT_TEST" in os.environ or (
+        os.name != "nt" and not os.environ.get("DISPLAY")
+    ):
         # during automated tests or headless environments use defaults
         global choice
         choice = list(OPTIONS.keys())[0]

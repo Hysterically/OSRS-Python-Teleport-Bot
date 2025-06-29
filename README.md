@@ -44,5 +44,7 @@ print to the terminal so you can monitor activity and debug issues.
 
 A configuration window first lets you choose the teleport and toggle options like the overlay, mouse overshoot and velocity limit. After clicking **Start** the bot begins spamming the chosen teleport. When enabled, the overlay window appears near the RuneLite window and can be dragged or resized; its geometry is saved in `overlay_pos.json`.
 
+On non-Windows systems the window is only shown when the `DISPLAY` environment variable is set. It is also skipped automatically during test runs.
+
 Press **1** at any time to pause or resume automation. Press **2** to show or hide the console window. Press **3** to stop the bot completely. If the teleport tab still cannot be found after the bot attempts to open it, it will press **F6** automatically as a fallback.
 
