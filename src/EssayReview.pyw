@@ -291,16 +291,30 @@ def bezier_move(tx, ty):
     else:
         path = _curve((cx, cy), (tx, ty))
     W = random.uniform(32, 48)
-    total = sum(math.hypot(px - sx, py - sy)
-                for (sx, sy), (px, py) in zip(path[:-1], path[1:])) or 1
+    seg_lens = [math.hypot(px - sx, py - sy)
+                for (sx, sy), (px, py) in zip(path[:-1], path[1:])]
+    total = sum(seg_lens) or 1
     T = fitts_time(total, W, a=random.uniform(.04, .06),
                    b=random.uniform(.04, .07))
     # Add built-in random variation and slower baseline
     T *= random.uniform(1.6, 2.4)
-    for (sx, sy), (px, py) in zip(path[:-1], path[1:]):
-        seg = math.hypot(px - sx, py - sy)
-        seg_T = seg / total * T * random.uniform(0.8, 1.2)
-        pag.moveTo(px, py, duration=clamp(seg_T, .01, .90),
+
+    def _sig(t: float, k: float = 8.0) -> float:
+        start = 1 / (1 + math.exp(k / 2))
+        end = 1 / (1 + math.exp(-k / 2))
+        y = 1 / (1 + math.exp(-k * (t - 0.5)))
+        return (y - start) / (end - start)
+
+    cum = 0.0
+    times = [0.0]
+    for seg in seg_lens:
+        cum += seg
+        times.append(_sig(cum / total) * T)
+
+    for (px, py), t0, t1 in zip(path[1:], times[:-1], times[1:]):
+        seg_T = (t1 - t0) * random.uniform(0.9, 1.1)
+        pag.moveTo(px, py,
+                   duration=clamp(seg_T, .01, .90),
                    tween=random.choice(TWEEN_FUNCS))
 
 
