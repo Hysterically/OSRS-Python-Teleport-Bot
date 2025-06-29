@@ -140,7 +140,8 @@ SPAM_MIN, SPAM_MAX = 1, 70
 REST_MIN, REST_MAX = 1, 40
 CLICK_MIN_GAP, CLICK_MAX_GAP = 0.06, 1.00
 CLICK_HOLD_MIN, CLICK_HOLD_MAX = 0.010, 0.060
-AFK_MIN_SECS, AFK_MAX_SECS = 1800, 5400
+# Increase AFK interval so events occur ~2.5x less often
+AFK_MIN_SECS, AFK_MAX_SECS = 4500, 13500
 SEGMENT_MIN, SEGMENT_MAX = 3, 6
 # Overshoot range for mouse movement (pixels). When the cursor distance is
 # small the overshoot amount is scaled down so movements between adjacent tabs
