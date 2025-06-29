@@ -122,8 +122,8 @@ def safe_locate(img, **kw):
         else:
             debug(f"Image {os.path.basename(img)} not found")
         return loc
-    except ImageNotFoundException:
-        debug(f"Image {os.path.basename(img)} not found (exception)")
+    except (ImageNotFoundException, ValueError) as e:
+        debug(f"Locate failed for {os.path.basename(img)}: {e}")
         return None
 
 
@@ -648,7 +648,7 @@ def spam_session():
                 TELEPORT_IMAGE,
                 confidence=CONFIDENCE,
                 grayscale=True,
-                region=(x - 5, y - 5, 10, 10),
+                region=(x - 20, y - 20, 40, 40),
             )
             if chk:
                 debug("click retry")
