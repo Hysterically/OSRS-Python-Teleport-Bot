@@ -31,11 +31,30 @@ ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 ENABLE_OVERLAY = True
 
 # Feature toggles ----------------------------------------------------
+# Move slightly past the target before coming back
+# to mimic how humans sometimes overshoot the cursor.
 ENABLE_OVERSHOOT = True
+
+# Add tiny wiggles during long mouse moves so the
+# cursor doesn't glide in a perfectly straight line.
 ENABLE_JITTER = True
+
+# Prevent unrealistic acceleration by capping how
+# quickly the mouse speed can change.
 ENABLE_VELOCITY_LIMIT = True
+
+# After moving to a rune, check the final mouse
+# position and correct drift before clicking.
 CHECK_FINAL_POS = True
+
+# Write every click position to the overlay and console
+# which helps diagnose missed clicks.
 LOG_CLICKS = True
+
+# Use a mouseDown → short pause → mouseUp sequence
+# for each click. This can be more reliable on some
+# systems than a regular quick click.
+ROBUST_CLICK = False
 
 
 
@@ -126,6 +145,7 @@ def config_prompt():
     vel_var = tk.BooleanVar(value=ENABLE_VELOCITY_LIMIT)
     final_var = tk.BooleanVar(value=CHECK_FINAL_POS)
     log_var = tk.BooleanVar(value=LOG_CLICKS)
+    robust_var = tk.BooleanVar(value=ROBUST_CLICK)
 
     tk.Label(root, text="Options:").pack(anchor="w", padx=10, pady=(10, 0))
     tk.Checkbutton(root, text="Enable overlay", variable=overlay_var).pack(
@@ -146,16 +166,20 @@ def config_prompt():
     tk.Checkbutton(root, text="Log clicks", variable=log_var).pack(
         anchor="w", padx=20
     )
+    tk.Checkbutton(root, text="Robust click", variable=robust_var).pack(
+        anchor="w", padx=20
+    )
 
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
-        global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, choice
+        global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK, choice
         ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
         ENABLE_VELOCITY_LIMIT = vel_var.get()
         CHECK_FINAL_POS = final_var.get()
         LOG_CLICKS = log_var.get()
+        ROBUST_CLICK = robust_var.get()
         choice = tele_var.get()
         root.destroy()
 
@@ -233,6 +257,8 @@ MAGIC_TAB_CONFIDENCE = 0.80
 SPAM_MIN, SPAM_MAX = 1, 70
 REST_MIN, REST_MAX = 1, 40
 CLICK_MIN_GAP, CLICK_MAX_GAP = 0.06, 1.00
+# Range of seconds to hold the mouse button down when
+# ROBUST_CLICK is enabled.
 CLICK_HOLD_MIN, CLICK_HOLD_MAX = 0.010, 0.060
 # Increase AFK interval so events occur ~5x less often
 AFK_MIN_SECS, AFK_MAX_SECS = 22500, 67500
@@ -711,7 +737,12 @@ def spam_session():
         # helper provides more reliable behaviour across platforms.
         if LOG_CLICKS:
             debug(f"click at {pag.position()}")
-        pag.click()
+        if ROBUST_CLICK:
+            pag.mouseDown()
+            time.sleep(random.uniform(CLICK_HOLD_MIN, CLICK_HOLD_MAX))
+            pag.mouseUp()
+        else:
+            pag.click()
         if LOG_CLICKS:
             debug("click issued")
         if CHECK_FINAL_POS:
