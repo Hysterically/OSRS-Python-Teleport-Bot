@@ -46,17 +46,6 @@ sys.modules['pygetwindow'] = SimpleNamespace()
 sys.modules.setdefault('win32gui', SimpleNamespace())
 sys.modules.setdefault('win32con', SimpleNamespace())
 
-class DummyOverlay:
-    def update_log(self, msg):
-        pass
-    def set_cape_scale(self, factor):
-        pass
-
-import types
-DraftTracker = types.ModuleType('src.DraftTracker')
-DraftTracker.DraftTracker = DummyOverlay
-sys.modules['src.DraftTracker'] = DraftTracker
-
 file_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'EssayReview.pyw')
 loader = importlib.machinery.SourceFileLoader('src.EssayReview', file_path)
 spec = importlib.util.spec_from_loader('src.EssayReview', loader)
