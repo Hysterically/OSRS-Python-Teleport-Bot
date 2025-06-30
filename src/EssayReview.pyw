@@ -393,6 +393,9 @@ overshoot_chance = 0.30
 last_move_velocities: list[float] = []
 teleport_last_seen = time.time()
 last_login_attempt = 0.0
+# Set to True while inside spam_session to disable
+# extra human-like cursor behaviours.
+in_spam_session = False
 
 # ───────────────── Maths helpers ───────────────────────────────────
 
@@ -647,6 +650,64 @@ def idle_wiggle():
     pag.moveTo(x + pink.next(), y + pink.next(), duration=random.uniform(0.02, 0.05))
 
 
+# ───────────────── Human-like extras ──────────────────────────────
+
+def post_move_drift():
+    """Slight cursor drift after a move."""
+    if in_spam_session or random.random() >= 0.3:
+        return
+    dx = int(random.gauss(0, 2))
+    dy = int(random.gauss(0, 2))
+    pag.moveRel(dx, dy, duration=gaussian_between(0.02, 0.15))
+
+
+def pre_click_hover(tx=None, ty=None):
+    """Briefly hover near the target before clicking."""
+    if in_spam_session or random.random() >= 0.3:
+        return
+    if tx is None or ty is None:
+        tx, ty = pag.position()
+    hx = int(tx + random.gauss(0, 5))
+    hy = int(ty + random.gauss(0, 5))
+    pag.moveTo(hx, hy, duration=gaussian_between(0.05, 0.20))
+    time.sleep(gaussian_between(0.05, 0.20))
+    pag.moveTo(tx, ty, duration=gaussian_between(0.05, 0.15))
+
+
+def idle_wander():
+    """Subtle cursor wandering during idle periods."""
+    if in_spam_session or random.random() >= 0.3:
+        return
+    sx, sy = pag.position()
+    end = time.time() + gaussian_between(0.5, 2.0)
+    while time.time() < end and bot_active:
+        nx = int(sx + random.gauss(0, 10))
+        ny = int(sy + random.gauss(0, 10))
+        pag.moveTo(nx, ny, duration=gaussian_between(0.05, 0.25))
+        time.sleep(gaussian_between(0.05, 0.25))
+    pag.moveTo(sx, sy, duration=gaussian_between(0.05, 0.25))
+
+
+def wander_offscreen_then_return():
+    """Move the cursor offscreen for a moment then return."""
+    if in_spam_session or random.random() >= 0.3:
+        return
+    sx, sy = pag.position()
+    w, h = pag.size()
+    side = random.choice(["left", "right", "top", "bottom"])
+    if side == "left":
+        ox, oy = -10, random.randint(0, h)
+    elif side == "right":
+        ox, oy = w + 10, random.randint(0, h)
+    elif side == "top":
+        ox, oy = random.randint(0, w), -10
+    else:
+        ox, oy = random.randint(0, w), h + 10
+    pag.moveTo(ox, oy, duration=gaussian_between(0.2, 0.5))
+    time.sleep(gaussian_between(0.2, 0.6))
+    pag.moveTo(sx, sy, duration=gaussian_between(0.2, 0.5))
+
+
 # ───────────────── Magic tab helper ───────────────────────────────
 
 
@@ -655,7 +716,10 @@ def click_magic_tab():
         return True
     tab = safe_locate(MAGIC_TAB_IMAGE, confidence=MAGIC_TAB_CONFIDENCE, grayscale=True)
     if tab:
-        bezier_move(*pag.center(tab))
+        tx, ty = pag.center(tab)
+        bezier_move(tx, ty)
+        post_move_drift()
+        pre_click_hover(tx, ty)
         pag.click()
         time.sleep(0.15)
         return True
@@ -672,13 +736,19 @@ def login(timeout: float = 15.0) -> bool:
     if not play:
         log("⚠️ PlayNow.png not found.")
         return False
-    bezier_move(*pag.center(play))
+    tx, ty = pag.center(play)
+    bezier_move(tx, ty)
+    post_move_drift()
+    pre_click_hover(tx, ty)
     pag.click()
     end = time.time() + timeout
     while time.time() < end:
         click = safe_locate(CLICK_TO_PLAY_IMAGE, confidence=CONFIDENCE, grayscale=True)
         if click:
-            bezier_move(*pag.center(click))
+            tx, ty = pag.center(click)
+            bezier_move(tx, ty)
+            post_move_drift()
+            pre_click_hover(tx, ty)
             pag.click()
             return True
         time.sleep(0.25)
@@ -734,6 +804,8 @@ def click_edge_youtube():
     tx = random.randint(win.left + 60, win.right - 60)
     ty = random.randint(win.top + 100, win.bottom - 100)
     bezier_move(tx, ty)
+    post_move_drift()
+    pre_click_hover(tx, ty)
     pag.click()
     return True
 
@@ -743,6 +815,8 @@ def scroll_loop(dur):
     end = time.time() + dur
     while time.time() < end and bot_active:
         pag.scroll(random.randint(-600, 600))
+        idle_wander()
+        wander_offscreen_then_return()
         time.sleep(random.uniform(0.5, 1.4))
 
 
@@ -766,8 +840,13 @@ def random_tab_loop(duration):
         tab_img = TAB_IMAGES[next_idx]
         loc = safe_locate(tab_img, confidence=CONFIDENCE, grayscale=True)
         if loc:
-            bezier_move(*pag.center(loc))
+            tx, ty = pag.center(loc)
+            bezier_move(tx, ty)
+            post_move_drift()
+            pre_click_hover(tx, ty)
             pag.click()
+            idle_wander()
+            wander_offscreen_then_return()
         t_next += random.expovariate(lam)
 
 
@@ -779,17 +858,25 @@ def stats_hover(dur) -> bool:
     stats = safe_locate(STATS_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True)
     if not stats:
         return False
-    bezier_move(*pag.center(stats))
+    tx, ty = pag.center(stats)
+    bezier_move(tx, ty)
+    post_move_drift()
+    pre_click_hover(tx, ty)
     pag.click()
     time.sleep(0.2)
     magic = safe_locate(MAGICLVL_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True)
     if not magic:
         return False
-    bezier_move(*pag.center(magic))
+    tx, ty = pag.center(magic)
+    bezier_move(tx, ty)
+    post_move_drift()
+    pre_click_hover(tx, ty)
     end = time.time() + dur
     while time.time() < end and bot_active:
         if feature("idle_wiggle"):
             idle_wiggle()
+        idle_wander()
+        wander_offscreen_then_return()
         maybe_outlier_event("rest")
         time.sleep(0.25)
     return True
@@ -799,6 +886,8 @@ def stats_hover(dur) -> bool:
 
 
 def default_rest(dur):
+    idle_wander()
+    wander_offscreen_then_return()
     ch = random.random()
     if ENABLE_BROWSER_AFK and ch < 0.60 and click_edge_youtube():
         scroll_loop(dur)
@@ -850,6 +939,8 @@ def handle_afk():
         end = time.time() + dur
         while time.time() < end and bot_active:
             maybe_outlier_event("afk")
+            idle_wander()
+            wander_offscreen_then_return()
             time.sleep(0.5)
     next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
     debug(f"Next AFK scheduled in {int(next_afk_time - time.time())} s")
@@ -857,111 +948,119 @@ def handle_afk():
 
 # ───────────────── Click-spam session ─────────────────────────────
 def spam_session():
-    burst = gaussian_between(SPAM_MIN, SPAM_MAX)
-    rest  = gaussian_between(REST_MIN, REST_MAX)
+    """Single teleport spam burst."""
+    global in_spam_session
+    in_spam_session = True
+    try:
+        burst = gaussian_between(SPAM_MIN, SPAM_MAX)
+        rest = gaussian_between(REST_MIN, REST_MAX)
 
-    # Always start by opening the Magic tab
-    click_magic_tab()
+        # Always start by opening the Magic tab
+        click_magic_tab()
 
-    loc = safe_locate(
-        TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
-    )
-    if not loc:
-        log("Teleport rune not found; clicking Magic tab...")
-        if not click_magic_tab():
-            log("⚠️ Could not open Magic tab; skipping burst.")
-            return
         loc = safe_locate(
             TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
         )
         if not loc:
-            log("Teleport rune still not found; pressing F6...")
-            pag.press("f6")
-            time.sleep(0.5)
+            log("Teleport rune not found; clicking Magic tab...")
+            if not click_magic_tab():
+                log("⚠️ Could not open Magic tab; skipping burst.")
+                return
             loc = safe_locate(
                 TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
             )
             if not loc:
-                log("Teleport rune still not found; skipping burst.")
-                maybe_login()
-                return
+                log("Teleport rune still not found; pressing F6...")
+                pag.press("f6")
+                time.sleep(0.5)
+                loc = safe_locate(
+                    TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
+                )
+                if not loc:
+                    log("Teleport rune still not found; skipping burst.")
+                    maybe_login()
+                    return
 
-    global teleport_last_seen
-    teleport_last_seen = time.time()
-    # Centre plus downward nudge
-    x, y = pag.center(loc)
-    y    += 3
-    log(f"Click burst {burst:.1f}s at ({x}, {y})")
+        global teleport_last_seen
+        teleport_last_seen = time.time()
+        # Centre plus downward nudge
+        x, y = pag.center(loc)
+        y += 3
+        log(f"Click burst {burst:.1f}s at ({x}, {y})")
 
-    end = time.time() + burst
-    while time.time() < end and bot_active:
-        handle_afk()
-        maybe_outlier_event("burst")
+        end = time.time() + burst
+        while time.time() < end and bot_active:
+            handle_afk()
+            maybe_outlier_event("burst")
 
-        # add a little randomness around the centre point
-        target_x = x + random.randint(-2, 2)
-        target_y = y + random.randint(-2, 2)
-        bezier_move(target_x, target_y)
+            # add a little randomness around the centre point
+            target_x = x + random.randint(-2, 2)
+            target_y = y + random.randint(-2, 2)
+            bezier_move(target_x, target_y)
 
-        # if the cursor drifted, re-align and force a click
-        if CHECK_FINAL_POS:
-            fx, fy = pag.position()
-            if math.hypot(fx - target_x, fy - target_y) > 3:
-                debug(f"cursor drifted to {(fx, fy)} expected {(target_x, target_y)}")
-                pag.moveTo(target_x, target_y)
-                pag.click()
-                continue
+            # if the cursor drifted, re-align and force a click
+            if CHECK_FINAL_POS:
+                fx, fy = pag.position()
+                if math.hypot(fx - target_x, fy - target_y) > 3:
+                    debug(
+                        f"cursor drifted to {(fx, fy)} expected {(target_x, target_y)}"
+                    )
+                    pag.moveTo(target_x, target_y)
+                    pag.click()
+                    continue
 
-        if feature("finger_hesitation"):
-            time.sleep(random.uniform(0.05, 0.15))
+            if feature("finger_hesitation"):
+                time.sleep(random.uniform(0.05, 0.15))
 
-        if LOG_CLICKS:
-            debug(f"click at {pag.position()}")
-
-        # robust click if enabled, else normal click
-        if ROBUST_CLICK:
-            pag.mouseDown()
-            time.sleep(random.uniform(CLICK_HOLD_MIN, CLICK_HOLD_MAX))
-            pag.mouseUp()
-        else:
-            pag.click()
-
-        if LOG_CLICKS:
-            debug("click issued")
-
-        # if the rune is still present, retry click once
-        if CHECK_FINAL_POS:
-            chk = safe_locate(
-                TELEPORT_IMAGE,
-                confidence=TELEPORT_CONFIDENCE,
-                grayscale=True,
-                region=(x - 20, y - 20, 40, 40),
-            )
-            if chk:
-                debug("click retry")
-                pag.click()
-
-        if feature("double_click"):
-            time.sleep(random.uniform(0.03, 0.08))
             if LOG_CLICKS:
-                debug("double click")
-            pag.click()
+                debug(f"click at {pag.position()}")
 
-        gap = (
-            gamma_between(0.12, 0.60, 2.5)
-            if feature("drift_click_timing")
-            else random.uniform(0.06, 1.00)
-        )
-        time.sleep(gap)
+            # robust click if enabled, else normal click
+            if ROBUST_CLICK:
+                pag.mouseDown()
+                time.sleep(random.uniform(CLICK_HOLD_MIN, CLICK_HOLD_MAX))
+                pag.mouseUp()
+            else:
+                pag.click()
 
-        if feature("idle_wiggle"):
-            idle_wiggle()
+            if LOG_CLICKS:
+                debug("click issued")
 
-    if ENABLE_REST:
-        log(f"Burst done. Rest {rest:.1f}s...")
-        handle_short_rest(rest)
-    else:
-        log("Burst done. Rest skipped.")
+            # if the rune is still present, retry click once
+            if CHECK_FINAL_POS:
+                chk = safe_locate(
+                    TELEPORT_IMAGE,
+                    confidence=TELEPORT_CONFIDENCE,
+                    grayscale=True,
+                    region=(x - 20, y - 20, 40, 40),
+                )
+                if chk:
+                    debug("click retry")
+                    pag.click()
+
+            if feature("double_click"):
+                time.sleep(random.uniform(0.03, 0.08))
+                if LOG_CLICKS:
+                    debug("double click")
+                pag.click()
+
+            gap = (
+                gamma_between(0.12, 0.60, 2.5)
+                if feature("drift_click_timing")
+                else random.uniform(0.06, 1.00)
+            )
+            time.sleep(gap)
+
+            if feature("idle_wiggle"):
+                idle_wiggle()
+
+        if ENABLE_REST:
+            log(f"Burst done. Rest {rest:.1f}s...")
+            handle_short_rest(rest)
+        else:
+            log("Burst done. Rest skipped.")
+    finally:
+        in_spam_session = False
 
 
 
