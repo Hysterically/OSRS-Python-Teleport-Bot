@@ -162,7 +162,7 @@ def config_prompt():
     ):
         # during automated tests or headless environments use defaults
         global choice
-        choice = list(OPTIONS.keys())[0]
+        choice = "Camelot"
         return choice
 
     import tkinter as tk
@@ -170,6 +170,9 @@ def config_prompt():
 
     root = tk.Tk()
     root.title("Bot Configuration")
+    root.geometry(
+        f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}+0+0"
+    )
     # ---- dark mode colours ----
     bg = "#2b2b2b"
     fg = "#ffffff"
@@ -185,13 +188,15 @@ def config_prompt():
     style.configure("TCheckbutton", background=bg, foreground=fg)
     style.configure("TButton", background="#444444", foreground=fg)
 
-    tele_var = tk.StringVar(value=list(OPTIONS.keys())[0])
-    tk.Label(root, text="Select teleport:", bg=bg, fg=fg).pack(
-        anchor="w", padx=10, pady=(10, 0)
+    container = ttk.Frame(root)
+    container.place(relx=0.5, rely=0.5, anchor="center")
+
+    tele_var = tk.StringVar(value="Camelot")
+    tk.Label(container, text="Select teleport:", bg=bg, fg=fg).pack(
+        pady=(10, 0)
     )
     for opt in OPTIONS.keys():
-        ttk.Radiobutton(root, text=opt, value=opt, variable=tele_var).pack(
-            anchor="w", padx=20
+        ttk.Radiobutton(container, text=opt, value=opt, variable=tele_var).pack(
         )
 
     overlay_var = tk.BooleanVar(value=ENABLE_OVERLAY)
@@ -209,10 +214,10 @@ def config_prompt():
     tabflip_var = tk.BooleanVar(value=ENABLE_TAB_FLIP)
     rest_var = tk.BooleanVar(value=ENABLE_REST)
 
-    tk.Label(root, text="Options:", bg=bg, fg=fg).pack(anchor="w", padx=10, pady=(10, 0))
+    tk.Label(container, text="Options:", bg=bg, fg=fg).pack(pady=(10, 0))
 
     def add_switch(label_text: str, var: tk.BooleanVar) -> None:
-        frame = ttk.Frame(root)
+        frame = ttk.Frame(container)
         ttk.Label(frame, text=label_text).pack(side="left")
         btn_text = tk.StringVar(value="On" if var.get() else "Off")
 
@@ -232,7 +237,7 @@ def config_prompt():
             activeforeground=fg,
             selectcolor=bg,
         ).pack(side="right", padx=(10, 0))
-        frame.pack(anchor="w", padx=20, pady=2)
+        frame.pack(pady=2)
 
     add_switch("Show overlay (info window)", overlay_var)
     add_switch("Mouse overshoot (aim past target)", over_var)
@@ -249,21 +254,17 @@ def config_prompt():
     add_switch("Random tab flips when idle", tabflip_var)
     add_switch("Rest between bursts", rest_var)
 
-    tk.Label(root, text="Teleport confidence:", bg=bg, fg=fg).pack(
-        anchor="w", padx=10, pady=(10, 0)
+    tk.Label(container, text="Teleport confidence:", bg=bg, fg=fg).pack(
+        pady=(10, 0)
     )
     tele_conf_var = tk.DoubleVar(value=TELEPORT_CONFIDENCE)
-    ttk.Entry(root, textvariable=tele_conf_var, width=5).pack(
-        anchor="w", padx=20
-    )
+    ttk.Entry(container, textvariable=tele_conf_var, width=5).pack()
 
-    tk.Label(root, text="Short rest task chance:", bg=bg, fg=fg).pack(
-        anchor="w", padx=10, pady=(10, 0)
+    tk.Label(container, text="Short rest task chance:", bg=bg, fg=fg).pack(
+        pady=(10, 0)
     )
     short_rest_prob_var = tk.DoubleVar(value=SHORT_REST_TASK_PROB)
-    ttk.Entry(root, textvariable=short_rest_prob_var, width=5).pack(
-        anchor="w", padx=20
-    )
+    ttk.Entry(container, textvariable=short_rest_prob_var, width=5).pack()
 
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
@@ -299,7 +300,7 @@ def config_prompt():
         choice = tele_var.get()
         root.destroy()
 
-    ttk.Button(root, text="Start", command=_start).pack(pady=10)
+    ttk.Button(container, text="Start", command=_start).pack(pady=10)
     root.protocol("WM_DELETE_WINDOW", lambda: sys.exit("No teleport selected – exiting."))
     root.mainloop()
     return choice
