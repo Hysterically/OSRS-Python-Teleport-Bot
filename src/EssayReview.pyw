@@ -86,6 +86,10 @@ ENABLE_TAB_FLIP = True
 # starts the next burst without pausing.
 ENABLE_REST = True
 
+# Chance that the bot performs any short AFK task during the brief rest
+# between bursts. Set between 0.0 (never) and 1.0 (always).
+SHORT_REST_TASK_PROB = 1.0
+
 
 
 class _DummyOverlay:
@@ -253,12 +257,21 @@ def config_prompt():
         anchor="w", padx=20
     )
 
+    tk.Label(root, text="Short rest task chance:", bg=bg, fg=fg).pack(
+        anchor="w", padx=10, pady=(10, 0)
+    )
+    short_rest_prob_var = tk.DoubleVar(value=SHORT_REST_TASK_PROB)
+    ttk.Entry(root, textvariable=short_rest_prob_var, width=5).pack(
+        anchor="w", padx=20
+    )
+
     def _start():
         global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
         global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
         global ENABLE_AFK, ENABLE_ANTIBAN
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
+        global SHORT_REST_TASK_PROB
         ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
@@ -277,6 +290,12 @@ def config_prompt():
             TELEPORT_CONFIDENCE = max(0.0, min(1.0, float(tele_conf_var.get())))
         except Exception:
             TELEPORT_CONFIDENCE = CONFIDENCE
+        try:
+            SHORT_REST_TASK_PROB = max(
+                0.0, min(1.0, float(short_rest_prob_var.get()))
+            )
+        except Exception:
+            SHORT_REST_TASK_PROB = 1.0
         choice = tele_var.get()
         root.destroy()
 
@@ -786,9 +805,15 @@ def default_rest(dur):
 def handle_short_rest(rest):
     if rest < 0.25:
         return
+    if random.random() >= SHORT_REST_TASK_PROB:
+        time.sleep(rest)
+        click_magic_tab()
+        return
     log(f"Short AFK task for {rest:.1f}s")
     maybe_outlier_event("rest")
-    if ENABLE_STATS_HOVER and (STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB):
+    if ENABLE_STATS_HOVER and (
+        STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB
+    ):
         if not stats_hover(rest):
             default_rest(rest)
     else:

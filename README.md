@@ -14,6 +14,7 @@ This project contains **EssayReview.pyw**, a teleport spam bot for Old School Ru
 - Toggle to enable verbose debug logging when troubleshooting.
 - New toggles let you disable stats hovering, Edge/YouTube AFK tasks
   random tab flips and the short rest between bursts if desired.
+- Entry to adjust how often short AFK tasks occur during those rests.
 - Simple login helper that clicks the RuneScape launcher buttons.
 - Hotkeys: **1** to pause/resume, **2** to toggle the console, **3** to quit.
 
@@ -49,7 +50,7 @@ rename it to `EssayReview.py` and launch it the same way. Logs now always
 print to the terminal so you can monitor activity and debug issues.
 
 
- A configuration window first lets you choose the teleport and toggle options like the overlay, mouse overshoot, velocity limit and robust click mode. Additional checkboxes control stats hovering, Edge/YouTube AFK tasks, tab flipping and the short rest after each burst. You can also enter the confidence threshold used to locate `Cam.png` (or other teleport icons). The default value is **0.8**. After clicking **Start** the bot begins spamming the chosen teleport. When enabled, the overlay window appears near the RuneLite window and can be dragged or resized; its geometry is saved in `overlay_pos.json`.
+ A configuration window first lets you choose the teleport and toggle options like the overlay, mouse overshoot, velocity limit and robust click mode. Additional checkboxes control stats hovering, Edge/YouTube AFK tasks, tab flipping and the short rest after each burst. There is also a field to set how often a short AFK task should run. You can also enter the confidence threshold used to locate `Cam.png` (or other teleport icons). The default value is **0.8**. After clicking **Start** the bot begins spamming the chosen teleport. When enabled, the overlay window appears near the RuneLite window and can be dragged or resized; its geometry is saved in `overlay_pos.json`.
 
 On non-Windows systems the window is only shown when the `DISPLAY` environment variable is set. It is also skipped automatically during test runs.
 
