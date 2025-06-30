@@ -822,6 +822,17 @@ def wander_offscreen_then_return():
     pag.moveTo(sx, sy, duration=gaussian_between(0.2, 0.5))
 
 
+def micro_jitter(duration: float) -> None:
+    """Tiny cursor jitters for the given duration."""
+    end = time.time() + duration
+    while time.time() < end and bot_active:
+        sig = random.uniform(2, 5)
+        dx = int(random.gauss(0, sig))
+        dy = int(random.gauss(0, sig))
+        pag.moveRel(dx, dy, duration=gaussian_between(0.02, 0.06))
+        time.sleep(random.uniform(0.2, 0.5))
+
+
 # ───────────────── Magic tab helper ───────────────────────────────
 
 
@@ -924,13 +935,43 @@ def click_edge_youtube():
     return True
 
 
-def scroll_loop(dur):
+def scroll_loop(dur: float) -> None:
+    """AFK interaction with a browser window."""
     log(f"Short AFK: scrolling for {dur:.1f}s")
     end = time.time() + dur
+    win = None
+    if hasattr(gw, "getActiveWindow"):
+        try:
+            win = gw.getActiveWindow()
+        except Exception:
+            win = None
+    if win:
+        cx = (win.left + win.right) / 2
+        cy = (win.top + win.bottom) / 2
+    else:
+        cx, cy = pag.position()
+    next_click = time.time() + clamp(random.gauss(4.0, 1.5), 1.0, 8.0)
+    next_pause = time.time() + clamp(random.gauss(15.0, 5.0), 5.0, dur)
     while time.time() < end and bot_active:
-        pag.scroll(random.randint(-600, 600))
+        if win:
+            tx = int(random.gauss(cx, win.width / 4))
+            ty = int(random.gauss(cy, win.height / 4))
+            tx = clamp(tx, win.left + 5, win.right - 5)
+            ty = clamp(ty, win.top + 5, win.bottom - 5)
+            bezier_move(tx, ty)
+        pag.scroll(int(random.gauss(0, 80)))
         idle_wander()
         wander_offscreen_then_return()
+        if time.time() >= next_click:
+            if random.random() < 0.5:
+                pag.click()
+            else:
+                pag.doubleClick()
+            next_click = time.time() + clamp(random.gauss(4.0, 1.5), 1.0, 8.0)
+        if time.time() >= next_pause:
+            pause = clamp(random.gauss(15.0, 5.0), 5.0, max(0.0, end - time.time()))
+            micro_jitter(pause)
+            next_pause = time.time() + clamp(random.gauss(15.0, 5.0), 5.0, dur)
         time.sleep(random.uniform(0.5, 1.4))
 
 
