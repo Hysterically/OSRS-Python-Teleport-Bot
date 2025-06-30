@@ -1107,9 +1107,17 @@ def spam_session():
             handle_afk()
             maybe_outlier_event("burst")
 
-            # add a little randomness around the centre point
-            target_x = x + random.randint(-2, 2)
-            target_y = y + random.randint(-2, 2)
+            # add a little randomness around the centre point using a
+            # Gaussian offset that mostly results in pixel-perfect clicks
+            drift_x = random.gauss(0, 0.3)
+            drift_y = random.gauss(0, 0.3)
+            if abs(drift_x) < 0.3:
+                drift_x = 0
+            if abs(drift_y) < 0.3:
+                drift_y = 0
+
+            target_x = x + int(round(drift_x))
+            target_y = y + int(round(drift_y))
             bezier_move(target_x, target_y)
 
             # if the cursor drifted, re-align and force a click
