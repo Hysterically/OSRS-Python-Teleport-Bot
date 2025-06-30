@@ -408,6 +408,9 @@ JITTER_PIXELS = 1  # ±pixels moved during jitter
 JITTER_DIST_THRESHOLD = 100  # only apply jitter when distance > this
 JITTER_PAUSE_MIN, JITTER_PAUSE_MAX = 0.003, 0.010
 
+# Seconds without seeing the teleport icon before attempting login
+LOGIN_RETRY_SECS = 180
+
 # ───────────────── Runtime state ───────────────────────────────────
 bot_active = True
 loop_counter = 0
@@ -416,6 +419,8 @@ next_afk_time = 0
 anti_ban_weights = {}
 overshoot_chance = 0.30
 last_move_velocities: list[float] = []
+teleport_last_seen = time.time()
+last_login_attempt = 0.0
 
 # ───────────────── Maths helpers ───────────────────────────────────
 
@@ -709,6 +714,35 @@ def login(timeout: float = 15.0) -> bool:
     return False
 
 
+def _startup_login_check() -> None:
+    """Attempt login on launch if the teleport rune is missing."""
+    global teleport_last_seen, last_login_attempt
+    if not safe_locate(
+        TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
+    ):
+        log("Teleport rune not found at start; attempting login...")
+        last_login_attempt = time.time()
+        if login():
+            teleport_last_seen = time.time()
+
+
+_startup_login_check()
+
+
+def maybe_login() -> None:
+    """Log in if the teleport rune has not been seen for LOGIN_RETRY_SECS."""
+    global last_login_attempt, teleport_last_seen
+    now = time.time()
+    if (
+        now - teleport_last_seen >= LOGIN_RETRY_SECS
+        and now - last_login_attempt >= LOGIN_RETRY_SECS
+    ):
+        log("Teleport rune missing for 3 minutes; attempting login...")
+        last_login_attempt = now
+        if login():
+            teleport_last_seen = time.time()
+
+
 # ───────────────── Edge / YouTube helpers ─────────────────────────
 
 
@@ -877,8 +911,11 @@ def spam_session():
             )
             if not loc:
                 log("Teleport rune still not found; skipping burst.")
+                maybe_login()
                 return
 
+    global teleport_last_seen
+    teleport_last_seen = time.time()
     # Centre plus downward nudge
     x, y = pag.center(loc)
     y    += 3
