@@ -1,11 +1,10 @@
 # =============================================================================
 # EssayReview.py – Var/Fal/Cam Teleport Spam Bot
-# v40  • StatsTab.png  • Random tab-flips on idle rest  • GC-safe DraftTracker
+# v40  • StatsTab.png  • Random tab-flips on idle rest
 # =============================================================================
 #  Hotkeys:  1 = pause/resume  •  2 = toggle console  •  3 = quit
 # =============================================================================
 import pygetwindow as gw
-from .DraftTracker import DraftTracker
 import pyautogui as pag
 from pyautogui import ImageNotFoundException
 try:
@@ -28,12 +27,6 @@ PKG_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.abspath(os.path.join(PKG_DIR, os.pardir))
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 
-# ───────────────────────── Overlay logger ──────────────────────────
-# Toggle for enabling the draggable overlay that shows recent log
-# messages and a magic cape image. The overlay is enabled by default
-# but can be switched off in the configuration window.
-ENABLE_OVERLAY = True
-
 # Feature toggles ----------------------------------------------------
 # Move slightly past the target before coming back
 # to mimic how humans sometimes overshoot the cursor.
@@ -51,7 +44,7 @@ ENABLE_VELOCITY_LIMIT = True
 # position and correct drift before clicking.
 CHECK_FINAL_POS = True
 
-# Write every click position to the overlay and console
+# Write every click position to the console
 # which helps diagnose missed clicks.
 LOG_CLICKS = True
 
@@ -92,17 +85,6 @@ SHORT_REST_TASK_PROB = 1.0
 
 
 
-class _DummyOverlay:
-    def update_log(self, msg: str) -> None:
-        pass
-
-    def set_cape_scale(self, factor: float) -> None:
-        pass
-
-
-# Placeholder overlay; the real DraftTracker instance is created after
-# the configuration window so the user can disable it before it starts.
-overlay: object = _DummyOverlay()
 
 # Default confidence for image recognition
 CONFIDENCE = 0.80
@@ -149,7 +131,6 @@ def debug(msg: str):
 
 def log(msg: str):
     stamp = datetime.now().strftime("%H:%M:%S")
-    overlay.update_log(f"{stamp} {msg}")
     print(f"{stamp} {msg}", flush=True)
 
 
@@ -199,7 +180,6 @@ def config_prompt():
         ttk.Radiobutton(container, text=opt, value=opt, variable=tele_var).pack(
         )
 
-    overlay_var = tk.BooleanVar(value=ENABLE_OVERLAY)
     over_var = tk.BooleanVar(value=ENABLE_OVERSHOOT)
     jitter_var = tk.BooleanVar(value=ENABLE_JITTER)
     vel_var = tk.BooleanVar(value=ENABLE_VELOCITY_LIMIT)
@@ -239,7 +219,6 @@ def config_prompt():
         ).pack(side="right", padx=(10, 0))
         frame.pack(pady=2)
 
-    add_switch("Show overlay (info window)", overlay_var)
     add_switch("Mouse overshoot (aim past target)", over_var)
     add_switch("Mouse jitter (tiny wiggles)", jitter_var)
     add_switch("Velocity limit (slower speed changes)", vel_var)
@@ -267,13 +246,12 @@ def config_prompt():
     ttk.Entry(container, textvariable=short_rest_prob_var, width=5).pack()
 
     def _start():
-        global ENABLE_OVERLAY, ENABLE_OVERSHOOT, ENABLE_JITTER
+        global ENABLE_OVERSHOOT, ENABLE_JITTER
         global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
         global ENABLE_AFK, ENABLE_ANTIBAN
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
         global SHORT_REST_TASK_PROB
-        ENABLE_OVERLAY = overlay_var.get()
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
         ENABLE_VELOCITY_LIMIT = vel_var.get()
@@ -323,12 +301,6 @@ if choice is None:
     sys.exit("No teleport selected – exiting.")
 TELEPORT_IMAGE = OPTIONS[choice]
 
-if ENABLE_OVERLAY:
-    overlay = DraftTracker()
-    try:
-        overlay.set_cape_scale(3.0)
-    except AttributeError:
-        pass
 
 # ─────────────────── Safe locate wrapper ───────────────────────────
 
