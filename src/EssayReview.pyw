@@ -85,6 +85,18 @@ SHORT_REST_TASK_PROB = 1.0
 
 
 
+# Human-like movement behaviours
+ENABLE_POST_MOVE_DRIFT = True
+POST_MOVE_DRIFT_PROB = 0.30
+ENABLE_PRE_CLICK_HOVER = True
+PRE_CLICK_HOVER_PROB = 0.30
+ENABLE_IDLE_WANDER = True
+IDLE_WANDER_PROB = 0.30
+ENABLE_WANDER_OFFSCREEN = True
+WANDER_OFFSCREEN_PROB = 0.30
+
+
+
 
 # Default confidence for image recognition
 CONFIDENCE = 0.80
@@ -194,6 +206,15 @@ def config_prompt():
     tabflip_var = tk.BooleanVar(value=ENABLE_TAB_FLIP)
     rest_var = tk.BooleanVar(value=ENABLE_REST)
 
+    post_drift_var = tk.BooleanVar(value=ENABLE_POST_MOVE_DRIFT)
+    post_drift_prob_var = tk.DoubleVar(value=POST_MOVE_DRIFT_PROB * 100)
+    pre_hover_var = tk.BooleanVar(value=ENABLE_PRE_CLICK_HOVER)
+    pre_hover_prob_var = tk.DoubleVar(value=PRE_CLICK_HOVER_PROB * 100)
+    idle_wander_var = tk.BooleanVar(value=ENABLE_IDLE_WANDER)
+    idle_wander_prob_var = tk.DoubleVar(value=IDLE_WANDER_PROB * 100)
+    offscreen_var = tk.BooleanVar(value=ENABLE_WANDER_OFFSCREEN)
+    offscreen_prob_var = tk.DoubleVar(value=WANDER_OFFSCREEN_PROB * 100)
+
     tk.Label(container, text="Options:", bg=bg, fg=fg).pack(pady=(10, 0))
 
     def add_switch(label_text: str, var: tk.BooleanVar) -> None:
@@ -219,6 +240,31 @@ def config_prompt():
         ).pack(side="right", padx=(10, 0))
         frame.pack(pady=2)
 
+    def add_move_setting(label_text: str, var: tk.BooleanVar, prob: tk.DoubleVar, info: str) -> None:
+        frame = ttk.Frame(container)
+        ttk.Label(frame, text=label_text).pack(side="left")
+        btn_text = tk.StringVar(value="On" if var.get() else "Off")
+
+        def _toggle() -> None:
+            btn_text.set("On" if var.get() else "Off")
+
+        tk.Checkbutton(
+            frame,
+            variable=var,
+            textvariable=btn_text,
+            indicatoron=False,
+            width=4,
+            command=_toggle,
+            bg=bg,
+            fg=fg,
+            activebackground="#444444",
+            activeforeground=fg,
+            selectcolor=bg,
+        ).pack(side="left", padx=(10, 0))
+        ttk.Entry(frame, textvariable=prob, width=5).pack(side="left", padx=(10, 0))
+        ttk.Label(frame, text=info).pack(side="left", padx=(10, 0))
+        frame.pack(pady=2, fill="x")
+
     add_switch("Mouse overshoot (aim past target)", over_var)
     add_switch("Mouse jitter (tiny wiggles)", jitter_var)
     add_switch("Velocity limit (slower speed changes)", vel_var)
@@ -232,6 +278,34 @@ def config_prompt():
     add_switch("Use Edge/YouTube during AFK", browser_var)
     add_switch("Random tab flips when idle", tabflip_var)
     add_switch("Rest between bursts", rest_var)
+
+    tk.Label(container, text="Human-Like Movement Settings:", bg=bg, fg=fg).pack(
+        pady=(10, 0)
+    )
+    add_move_setting(
+        "Post-move drift",
+        post_drift_var,
+        post_drift_prob_var,
+        "Makes the mouse wiggle after moving",
+    )
+    add_move_setting(
+        "Pre-click hover",
+        pre_hover_var,
+        pre_hover_prob_var,
+        "Hovers near the target before clicking",
+    )
+    add_move_setting(
+        "Idle wander",
+        idle_wander_var,
+        idle_wander_prob_var,
+        "Subtle cursor movement while idle",
+    )
+    add_move_setting(
+        "Off-screen wander",
+        offscreen_var,
+        offscreen_prob_var,
+        "Moves off-screen briefly then returns",
+    )
 
     tk.Label(container, text="Teleport confidence:", bg=bg, fg=fg).pack(
         pady=(10, 0)
@@ -252,6 +326,10 @@ def config_prompt():
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
         global SHORT_REST_TASK_PROB
+        global ENABLE_POST_MOVE_DRIFT, POST_MOVE_DRIFT_PROB
+        global ENABLE_PRE_CLICK_HOVER, PRE_CLICK_HOVER_PROB
+        global ENABLE_IDLE_WANDER, IDLE_WANDER_PROB
+        global ENABLE_WANDER_OFFSCREEN, WANDER_OFFSCREEN_PROB
         ENABLE_OVERSHOOT = over_var.get()
         ENABLE_JITTER = jitter_var.get()
         ENABLE_VELOCITY_LIMIT = vel_var.get()
@@ -275,6 +353,34 @@ def config_prompt():
             )
         except Exception:
             SHORT_REST_TASK_PROB = 1.0
+        ENABLE_POST_MOVE_DRIFT = post_drift_var.get()
+        ENABLE_PRE_CLICK_HOVER = pre_hover_var.get()
+        ENABLE_IDLE_WANDER = idle_wander_var.get()
+        ENABLE_WANDER_OFFSCREEN = offscreen_var.get()
+        try:
+            POST_MOVE_DRIFT_PROB = max(
+                0.0, min(1.0, float(post_drift_prob_var.get()) / 100)
+            )
+        except Exception:
+            POST_MOVE_DRIFT_PROB = 0.30
+        try:
+            PRE_CLICK_HOVER_PROB = max(
+                0.0, min(1.0, float(pre_hover_prob_var.get()) / 100)
+            )
+        except Exception:
+            PRE_CLICK_HOVER_PROB = 0.30
+        try:
+            IDLE_WANDER_PROB = max(
+                0.0, min(1.0, float(idle_wander_prob_var.get()) / 100)
+            )
+        except Exception:
+            IDLE_WANDER_PROB = 0.30
+        try:
+            WANDER_OFFSCREEN_PROB = max(
+                0.0, min(1.0, float(offscreen_prob_var.get()) / 100)
+            )
+        except Exception:
+            WANDER_OFFSCREEN_PROB = 0.30
         choice = tele_var.get()
         root.destroy()
 
@@ -654,7 +760,9 @@ def idle_wiggle():
 
 def post_move_drift():
     """Slight cursor drift after a move."""
-    if in_spam_session or random.random() >= 0.3:
+    if not ENABLE_POST_MOVE_DRIFT:
+        return
+    if in_spam_session or random.random() >= POST_MOVE_DRIFT_PROB:
         return
     dx = int(random.gauss(0, 2))
     dy = int(random.gauss(0, 2))
@@ -663,7 +771,9 @@ def post_move_drift():
 
 def pre_click_hover(tx=None, ty=None):
     """Briefly hover near the target before clicking."""
-    if in_spam_session or random.random() >= 0.3:
+    if not ENABLE_PRE_CLICK_HOVER:
+        return
+    if in_spam_session or random.random() >= PRE_CLICK_HOVER_PROB:
         return
     if tx is None or ty is None:
         tx, ty = pag.position()
@@ -676,7 +786,9 @@ def pre_click_hover(tx=None, ty=None):
 
 def idle_wander():
     """Subtle cursor wandering during idle periods."""
-    if in_spam_session or random.random() >= 0.3:
+    if not ENABLE_IDLE_WANDER:
+        return
+    if in_spam_session or random.random() >= IDLE_WANDER_PROB:
         return
     sx, sy = pag.position()
     end = time.time() + gaussian_between(0.5, 2.0)
@@ -690,7 +802,9 @@ def idle_wander():
 
 def wander_offscreen_then_return():
     """Move the cursor offscreen for a moment then return."""
-    if in_spam_session or random.random() >= 0.3:
+    if not ENABLE_WANDER_OFFSCREEN:
+        return
+    if in_spam_session or random.random() >= WANDER_OFFSCREEN_PROB:
         return
     sx, sy = pag.position()
     w, h = pag.size()
