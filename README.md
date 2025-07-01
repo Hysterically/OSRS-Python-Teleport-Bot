@@ -49,7 +49,9 @@ rename it to `EssayReview.py` and launch it the same way. Logs now always
 print to the terminal so you can monitor activity and debug issues.
 
 
- A configuration window first lets you choose the teleport and toggle options like mouse overshoot, velocity limit and robust click mode. Additional checkboxes control stats hovering, Edge/YouTube AFK tasks, tab flipping and the short rest after each burst. There is also a field to set how often a short AFK task should run. A slider lets you adjust the overall AFK break frequency. You can also enter the confidence threshold used to locate `Cam.png` (or other teleport icons). The default value is **0.8**. After clicking **Start** the bot begins spamming the chosen teleport.
+Use the config window to choose a teleport and turn features on or off.
+Check boxes for overshoot, stats hover, tab flips and other options.
+Set break rate and icon confidence, then click **Start** to begin.
 
 On non-Windows systems the window is only shown when the `DISPLAY` environment variable is set. It is also skipped automatically during test runs.
 

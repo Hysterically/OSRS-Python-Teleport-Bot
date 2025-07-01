@@ -285,7 +285,7 @@ def config_prompt():
 
     tk.Label(
         container,
-        text="AFK Frequency: Drag to make breaks more or less frequent",
+        text="AFK Frequency:\nDrag to change\nhow often breaks occur",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
