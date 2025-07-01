@@ -279,6 +279,26 @@ def config_prompt():
     short_rest_prob_var = tk.DoubleVar(value=SHORT_REST_TASK_PROB)
     ttk.Entry(container, textvariable=short_rest_prob_var, width=5).pack()
 
+    tk.Label(
+        container,
+        text="AFK Frequency: Drag to make breaks more or less frequent",
+        bg=bg,
+        fg=fg,
+    ).pack(pady=(10, 0))
+    afk_freq_var = tk.DoubleVar(value=AFK_FREQ_LEVEL * 100)
+    tk.Scale(
+        container,
+        variable=afk_freq_var,
+        from_=0,
+        to=100,
+        orient="horizontal",
+        length=200,
+        bg=bg,
+        fg=fg,
+        troughcolor="#444444",
+        highlightthickness=0,
+    ).pack()
+
     def _start():
         global ENABLE_OVERSHOOT, ENABLE_JITTER
         global ENABLE_VELOCITY_LIMIT, CHECK_FINAL_POS, LOG_CLICKS, ROBUST_CLICK
@@ -286,6 +306,7 @@ def config_prompt():
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
         global SHORT_REST_TASK_PROB
+        global AFK_FREQ_LEVEL
         global ENABLE_POST_MOVE_DRIFT, POST_MOVE_DRIFT_PROB
         global ENABLE_PRE_CLICK_HOVER, PRE_CLICK_HOVER_PROB
         global ENABLE_IDLE_WANDER, IDLE_WANDER_PROB
@@ -313,6 +334,10 @@ def config_prompt():
             )
         except Exception:
             SHORT_REST_TASK_PROB = 1.0
+        try:
+            AFK_FREQ_LEVEL = clamp(float(afk_freq_var.get()) / 100, 0.0, 1.0)
+        except Exception:
+            AFK_FREQ_LEVEL = 0.0
         ENABLE_POST_MOVE_DRIFT = post_drift_var.get()
         ENABLE_PRE_CLICK_HOVER = pre_hover_var.get()
         ENABLE_IDLE_WANDER = idle_wander_var.get()
@@ -342,6 +367,7 @@ def config_prompt():
         except Exception:
             WANDER_OFFSCREEN_PROB = 0.30
         choice = tele_var.get()
+        update_afk_settings()
         root.destroy()
 
     ttk.Button(container, text="Start", command=_start).pack(pady=10)
@@ -410,14 +436,24 @@ OPEN_CONFIDENCE = 0.85
 MAGIC_TAB_CONFIDENCE = 0.80
 
 # ───────────────── Behaviour constants ────────────────────────────
-SPAM_MIN, SPAM_MAX = 1, 70
-REST_MIN, REST_MAX = 1, 40
+# Base values used when calculating AFK timing.
+BASE_SPAM_MIN, BASE_SPAM_MAX = 1, 70
+BASE_REST_MIN, BASE_REST_MAX = 1, 40
+BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 60 * 60, 90 * 60  # 60–90 mins
+
+HIGH_SPAM_MAX = 20
+HIGH_REST_MIN, HIGH_REST_MAX = 5, 120
+HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60  # 5–15 mins
+
+AFK_FREQ_LEVEL = 0.0  # 0 = low frequency, 1 = high frequency
+
+SPAM_MIN, SPAM_MAX = BASE_SPAM_MIN, BASE_SPAM_MAX
+REST_MIN, REST_MAX = BASE_REST_MIN, BASE_REST_MAX
 CLICK_MIN_GAP, CLICK_MAX_GAP = 0.06, 1.00
 # Range of seconds to hold the mouse button down when
 # ROBUST_CLICK is enabled.
 CLICK_HOLD_MIN, CLICK_HOLD_MAX = 0.010, 0.060
-# Increase AFK interval so events occur ~5x less often
-AFK_MIN_SECS, AFK_MAX_SECS = 22500, 67500
+AFK_MIN_SECS, AFK_MAX_SECS = BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS
 SEGMENT_MIN, SEGMENT_MAX = 3, 6
 # Overshoot range for mouse movement (pixels). When the cursor distance is
 # small the overshoot amount is scaled down so movements between adjacent tabs
@@ -499,6 +535,26 @@ class PinkNoise:
 
 pink = PinkNoise()
 
+# ───────────────── AFK frequency helper ───────────────────────────
+
+
+def update_afk_settings() -> None:
+    """Update AFK-related timing based on ``AFK_FREQ_LEVEL``."""
+    global SPAM_MIN, SPAM_MAX, REST_MIN, REST_MAX
+    global AFK_MIN_SECS, AFK_MAX_SECS
+
+    f = clamp(AFK_FREQ_LEVEL, 0.0, 1.0)
+
+    SPAM_MIN = BASE_SPAM_MIN
+    SPAM_MAX = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
+
+    REST_MIN = int((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN)
+    REST_MAX = int((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX)
+
+    AFK_MIN_SECS = int((1 - f) * BASE_AFK_MIN_SECS + f * HIGH_AFK_MIN_SECS)
+    AFK_MAX_SECS = int((1 - f) * BASE_AFK_MAX_SECS + f * HIGH_AFK_MAX_SECS)
+
+# ───────────────── Anti-ban weights ────────────────────────────────
 # ───────────────── Anti-ban weights ────────────────────────────────
 
 
