@@ -41,7 +41,7 @@ ENABLE_STATS_HOVER = True
 ENABLE_BROWSER_AFK = True
 ENABLE_TAB_FLIP = True
 ENABLE_REST = True
-SHORT_REST_TASK_PROB = 1.0
+MINI_AFK_PROB = 1.0
 
 
 
@@ -273,11 +273,11 @@ def config_prompt():
     tele_conf_var = tk.DoubleVar(value=TELEPORT_CONFIDENCE)
     ttk.Entry(container, textvariable=tele_conf_var, width=5).pack()
 
-    tk.Label(container, text="Short rest task chance:", bg=bg, fg=fg).pack(
+    tk.Label(container, text="Mini AFK chance:", bg=bg, fg=fg).pack(
         pady=(10, 0)
     )
-    short_rest_prob_var = tk.DoubleVar(value=SHORT_REST_TASK_PROB)
-    ttk.Entry(container, textvariable=short_rest_prob_var, width=5).pack()
+    mini_afk_prob_var = tk.DoubleVar(value=MINI_AFK_PROB)
+    ttk.Entry(container, textvariable=mini_afk_prob_var, width=5).pack()
 
     def _start():
         global ENABLE_OVERSHOOT, ENABLE_JITTER
@@ -285,7 +285,7 @@ def config_prompt():
         global ENABLE_AFK, ENABLE_ANTIBAN
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
-        global SHORT_REST_TASK_PROB
+        global MINI_AFK_PROB
         global ENABLE_POST_MOVE_DRIFT, POST_MOVE_DRIFT_PROB
         global ENABLE_PRE_CLICK_HOVER, PRE_CLICK_HOVER_PROB
         global ENABLE_IDLE_WANDER, IDLE_WANDER_PROB
@@ -308,11 +308,11 @@ def config_prompt():
         except Exception:
             TELEPORT_CONFIDENCE = CONFIDENCE
         try:
-            SHORT_REST_TASK_PROB = max(
-                0.0, min(1.0, float(short_rest_prob_var.get()))
+            MINI_AFK_PROB = max(
+                0.0, min(1.0, float(mini_afk_prob_var.get()))
             )
         except Exception:
-            SHORT_REST_TASK_PROB = 1.0
+            MINI_AFK_PROB = 1.0
         ENABLE_POST_MOVE_DRIFT = post_drift_var.get()
         ENABLE_PRE_CLICK_HOVER = pre_hover_var.get()
         ENABLE_IDLE_WANDER = idle_wander_var.get()
@@ -919,7 +919,7 @@ def click_edge_youtube():
 
 def scroll_loop(dur: float) -> None:
     """AFK interaction with a browser window."""
-    log(f"Short AFK: scrolling for {dur:.1f}s")
+    log(f"Mini AFK: scrolling for {dur:.1f}s")
     end = time.time() + dur
     win = None
     if hasattr(gw, "getActiveWindow"):
@@ -961,7 +961,7 @@ def scroll_loop(dur: float) -> None:
 
 
 def random_tab_loop(duration):
-    log(f"Short AFK: tab flipping for {duration:.1f}s")
+    log(f"Mini AFK: tab flipping for {duration:.1f}s")
     mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)  # mean sec between flips
     lam = 1.0 / mu
     t_next = time.time() + random.expovariate(lam)
@@ -991,7 +991,7 @@ def random_tab_loop(duration):
 
 
 def stats_hover(dur) -> bool:
-    log(f"Short AFK: hovering stats for {dur:.1f}s")
+    log(f"Mini AFK: hovering stats for {dur:.1f}s")
     stats = safe_locate(STATS_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True)
     if not stats:
         return False
@@ -1048,11 +1048,11 @@ def default_rest(dur):
 def handle_short_rest(rest):
     if rest < 0.25:
         return
-    if random.random() >= SHORT_REST_TASK_PROB:
+    if random.random() >= MINI_AFK_PROB:
         time.sleep(rest)
         click_magic_tab()
         return
-    log(f"Short AFK task for {rest:.1f}s")
+    log(f"Mini AFK task for {rest:.1f}s")
     maybe_outlier_event("rest")
     if ENABLE_STATS_HOVER and (
         STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB
