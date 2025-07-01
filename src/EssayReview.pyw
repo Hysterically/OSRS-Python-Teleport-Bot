@@ -142,7 +142,7 @@ def config_prompt():
     style.configure("TButton", background="#444444", foreground=fg)
 
     container = ttk.Frame(root)
-    container.place(relx=0.5, rely=0.5, anchor="center")
+    container.pack(fill="both", expand=True, padx=20, pady=20)
 
     tele_var = tk.StringVar(value="Camelot")
     tk.Label(container, text="Select teleport:", bg=bg, fg=fg).pack(
@@ -181,6 +181,8 @@ def config_prompt():
     options_frame.pack()
     _switch_pos = [0, 0]
     _switch_cols = 3
+    for i in range(_switch_cols):
+        options_frame.columnconfigure(i, weight=1)
 
     def add_switch(label_text: str, var: tk.BooleanVar) -> None:
         frame = ttk.Frame(options_frame)
@@ -213,6 +215,8 @@ def config_prompt():
     move_frame.pack(pady=(10, 0))
     _move_pos = [0, 0]
     _move_cols = 2
+    for i in range(_move_cols):
+        move_frame.columnconfigure(i, weight=1)
 
     def add_move_setting(label_text: str, var: tk.BooleanVar, prob: tk.DoubleVar, info: str) -> None:
         frame = ttk.Frame(move_frame)
