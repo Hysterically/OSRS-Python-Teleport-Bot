@@ -379,7 +379,7 @@ def safe_locate(img, **kw):
         else:
             debug(f"Image {os.path.basename(img)} not found")
         return loc
-    except (ImageNotFoundException, ValueError) as e:
+    except (ImageNotFoundException, ValueError, OSError) as e:
         debug(f"Locate failed for {os.path.basename(img)}: {e}")
         return None
 
