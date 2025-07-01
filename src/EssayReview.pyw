@@ -303,26 +303,26 @@ def config_prompt():
 
     tk.Label(
         container,
-        text="Rest Frequency: drag for shorter or longer rests",
+        text="Mini-AFK Frequency: drag for shorter or longer rests",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
-    rest_freq_var = tk.DoubleVar(value=REST_FREQ_LEVEL * 100)
-    rest_freq_desc = tk.Label(container, bg=bg, fg=fg)
-    rest_freq_desc.pack()
-    def _update_rest_desc(val: str) -> None:
+    mini_afk_freq_var = tk.DoubleVar(value=MINI_AFK_FREQ_LEVEL * 100)
+    mini_afk_freq_desc = tk.Label(container, bg=bg, fg=fg)
+    mini_afk_freq_desc.pack()
+    def _update_mini_afk_desc(val: str) -> None:
         f = clamp(float(val) / 100, 0.0, 1.0)
         spam_max = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
         rest_min = int((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN)
         rest_max = int((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX)
         avg_burst = int((BASE_SPAM_MIN + spam_max) / 2)
         avg_rest = int((rest_min + rest_max) / 2)
-        rest_freq_desc.config(
+        mini_afk_freq_desc.config(
             text=f"~{avg_burst} teleports then {avg_rest}s rest"
         )
     tk.Scale(
         container,
-        variable=rest_freq_var,
+        variable=mini_afk_freq_var,
         from_=0,
         to=100,
         orient="horizontal",
@@ -331,9 +331,9 @@ def config_prompt():
         fg=fg,
         troughcolor="#444444",
         highlightthickness=0,
-        command=_update_rest_desc,
+        command=_update_mini_afk_desc,
     ).pack()
-    _update_rest_desc(rest_freq_var.get())
+    _update_mini_afk_desc(mini_afk_freq_var.get())
 
     tk.Label(
         container,
@@ -406,7 +406,7 @@ def config_prompt():
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
         global SHORT_REST_TASK_PROB
-        global AFK_FREQ_LEVEL, REST_FREQ_LEVEL, LONG_AFK_FREQ_LEVEL
+        global AFK_FREQ_LEVEL, MINI_AFK_FREQ_LEVEL, LONG_AFK_FREQ_LEVEL
         global ENABLE_POST_MOVE_DRIFT, POST_MOVE_DRIFT_PROB
         global ENABLE_PRE_CLICK_HOVER, PRE_CLICK_HOVER_PROB
         global ENABLE_IDLE_WANDER, IDLE_WANDER_PROB
@@ -435,9 +435,9 @@ def config_prompt():
         except Exception:
             SHORT_REST_TASK_PROB = 1.0
         try:
-            REST_FREQ_LEVEL = clamp(float(rest_freq_var.get()) / 100, 0.0, 1.0)
+            MINI_AFK_FREQ_LEVEL = clamp(float(mini_afk_freq_var.get()) / 100, 0.0, 1.0)
         except Exception:
-            REST_FREQ_LEVEL = 0.0
+            MINI_AFK_FREQ_LEVEL = 0.0
         try:
             AFK_FREQ_LEVEL = clamp(float(short_afk_freq_var.get()) / 100, 0.0, 1.0)
         except Exception:
@@ -493,7 +493,7 @@ def update_afk_settings() -> None:
     global AFK_MIN_SECS, AFK_MAX_SECS
     global LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS
 
-    f_rest = clamp(REST_FREQ_LEVEL, 0.0, 1.0)
+    f_rest = clamp(MINI_AFK_FREQ_LEVEL, 0.0, 1.0)
     f_short = clamp(AFK_FREQ_LEVEL, 0.0, 1.0)
     f_long = clamp(LONG_AFK_FREQ_LEVEL, 0.0, 1.0)
 
@@ -575,7 +575,7 @@ HIGH_REST_MIN, HIGH_REST_MAX = 5, 120
 HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60  # 5–15 mins
 HIGH_LONG_AFK_MIN_SECS, HIGH_LONG_AFK_MAX_SECS = 40 * 60, 80 * 60  # 40–80m
 
-REST_FREQ_LEVEL = 0.0  # 0 = low frequency, 1 = high frequency
+MINI_AFK_FREQ_LEVEL = 0.0  # 0 = low frequency, 1 = high frequency
 AFK_FREQ_LEVEL = 0.0
 LONG_AFK_FREQ_LEVEL = 0.0
 
