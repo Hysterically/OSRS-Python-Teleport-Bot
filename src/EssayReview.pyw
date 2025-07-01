@@ -376,6 +376,26 @@ def config_prompt():
     return choice
 
 
+# ───────────────── AFK frequency helper ───────────────────────────
+
+
+def update_afk_settings() -> None:
+    """Update AFK-related timing based on ``AFK_FREQ_LEVEL``."""
+    global SPAM_MIN, SPAM_MAX, REST_MIN, REST_MAX
+    global AFK_MIN_SECS, AFK_MAX_SECS
+
+    f = clamp(AFK_FREQ_LEVEL, 0.0, 1.0)
+
+    SPAM_MIN = BASE_SPAM_MIN
+    SPAM_MAX = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
+
+    REST_MIN = int((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN)
+    REST_MAX = int((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX)
+
+    AFK_MIN_SECS = int((1 - f) * BASE_AFK_MIN_SECS + f * HIGH_AFK_MIN_SECS)
+    AFK_MAX_SECS = int((1 - f) * BASE_AFK_MAX_SECS + f * HIGH_AFK_MAX_SECS)
+
+
 # ───────────────────── PyAutoGUI tweaks ────────────────────────────
 pag.FAILSAFE = False
 pag.PAUSE = 0
@@ -392,6 +412,7 @@ config_prompt()
 if choice is None:
     sys.exit("No teleport selected – exiting.")
 TELEPORT_IMAGE = OPTIONS[choice]
+
 
 
 # ─────────────────── Safe locate wrapper ───────────────────────────
@@ -466,7 +487,6 @@ SMOOTH_STOP_DIST = 40  # distance (px) to begin slowing for final stop
 
 STATS_REST_PROB = 0.10
 STATS_REST_TEST_MODE = False
-
 TWEEN_FUNCS = [
     pag.easeInQuad,
     pag.easeOutQuad,
@@ -534,25 +554,6 @@ class PinkNoise:
 
 
 pink = PinkNoise()
-
-# ───────────────── AFK frequency helper ───────────────────────────
-
-
-def update_afk_settings() -> None:
-    """Update AFK-related timing based on ``AFK_FREQ_LEVEL``."""
-    global SPAM_MIN, SPAM_MAX, REST_MIN, REST_MAX
-    global AFK_MIN_SECS, AFK_MAX_SECS
-
-    f = clamp(AFK_FREQ_LEVEL, 0.0, 1.0)
-
-    SPAM_MIN = BASE_SPAM_MIN
-    SPAM_MAX = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
-
-    REST_MIN = int((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN)
-    REST_MAX = int((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX)
-
-    AFK_MIN_SECS = int((1 - f) * BASE_AFK_MIN_SECS + f * HIGH_AFK_MIN_SECS)
-    AFK_MAX_SECS = int((1 - f) * BASE_AFK_MAX_SECS + f * HIGH_AFK_MAX_SECS)
 
 # ───────────────── Anti-ban weights ────────────────────────────────
 # ───────────────── Anti-ban weights ────────────────────────────────
