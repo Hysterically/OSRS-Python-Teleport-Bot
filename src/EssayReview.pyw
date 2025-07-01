@@ -833,6 +833,28 @@ def micro_jitter(duration: float) -> None:
         time.sleep(random.uniform(0.2, 0.5))
 
 
+def _hover_jitter_variant_a():
+    """Fine micro-jitters with small Gaussian offsets."""
+    dx = int(clamp(random.gauss(0, 1.5), -3, 3))
+    dy = int(clamp(random.gauss(0, 1.5), -3, 3))
+    if dx or dy:
+        pag.moveRel(dx, dy, duration=gaussian_between(0.01, 0.03))
+
+
+def _hover_jitter_variant_b():
+    """Broader tracking jitters occasionally triggered by a Gaussian curve."""
+    if random.gauss(0, 1) > 0.6:
+        dx = int(clamp(random.gauss(0, 3), -5, 5))
+        dy = int(clamp(random.gauss(0, 3), -5, 5))
+        pag.moveRel(dx, dy, duration=gaussian_between(0.03, 0.08))
+        if random.random() < 0.3:
+            pag.moveRel(
+                -dx + int(random.gauss(0, 1)),
+                -dy + int(random.gauss(0, 1)),
+                duration=gaussian_between(0.03, 0.08),
+            )
+
+
 # ───────────────── Magic tab helper ───────────────────────────────
 
 
@@ -1027,13 +1049,23 @@ def stats_hover(dur) -> bool:
     post_move_drift()
     pre_click_hover(tx, ty)
     end = time.time() + dur
+    use_a = random.random() < 0.5
+    next_jitter = time.time()
     while time.time() < end and bot_active:
+        now = time.time()
+        if now >= next_jitter:
+            if use_a:
+                _hover_jitter_variant_a()
+                next_jitter = now + random.uniform(0.05, 0.25)
+            else:
+                _hover_jitter_variant_b()
+                next_jitter = now + random.uniform(0.10, 0.30)
         if feature("idle_wiggle"):
             idle_wiggle()
         idle_wander()
         wander_offscreen_then_return()
         maybe_outlier_event("rest")
-        time.sleep(0.25)
+        time.sleep(0.05)
     return True
 
 
