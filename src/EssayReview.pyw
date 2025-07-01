@@ -308,6 +308,18 @@ def config_prompt():
         fg=fg,
     ).pack(pady=(10, 0))
     rest_freq_var = tk.DoubleVar(value=REST_FREQ_LEVEL * 100)
+    rest_freq_desc = tk.Label(container, bg=bg, fg=fg)
+    rest_freq_desc.pack()
+    def _update_rest_desc(val: str) -> None:
+        f = clamp(float(val) / 100, 0.0, 1.0)
+        spam_max = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
+        rest_min = int((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN)
+        rest_max = int((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX)
+        avg_burst = int((BASE_SPAM_MIN + spam_max) / 2)
+        avg_rest = int((rest_min + rest_max) / 2)
+        rest_freq_desc.config(
+            text=f"~{avg_burst} teleports then {avg_rest}s rest"
+        )
     tk.Scale(
         container,
         variable=rest_freq_var,
@@ -319,7 +331,9 @@ def config_prompt():
         fg=fg,
         troughcolor="#444444",
         highlightthickness=0,
+        command=_update_rest_desc,
     ).pack()
+    _update_rest_desc(rest_freq_var.get())
 
     tk.Label(
         container,
@@ -328,6 +342,14 @@ def config_prompt():
         fg=fg,
     ).pack(pady=(10, 0))
     short_afk_freq_var = tk.DoubleVar(value=AFK_FREQ_LEVEL * 100)
+    short_afk_freq_desc = tk.Label(container, bg=bg, fg=fg)
+    short_afk_freq_desc.pack()
+    def _update_short_desc(val: str) -> None:
+        f = clamp(float(val) / 100, 0.0, 1.0)
+        smin = int((1 - f) * BASE_AFK_MIN_SECS + f * HIGH_AFK_MIN_SECS)
+        smax = int((1 - f) * BASE_AFK_MAX_SECS + f * HIGH_AFK_MAX_SECS)
+        avg = int((smin + smax) / 2 / 60)
+        short_afk_freq_desc.config(text=f"about every {avg} mins")
     tk.Scale(
         container,
         variable=short_afk_freq_var,
@@ -339,7 +361,9 @@ def config_prompt():
         fg=fg,
         troughcolor="#444444",
         highlightthickness=0,
+        command=_update_short_desc,
     ).pack()
+    _update_short_desc(short_afk_freq_var.get())
 
     tk.Label(
         container,
@@ -348,6 +372,18 @@ def config_prompt():
         fg=fg,
     ).pack(pady=(10, 0))
     long_afk_freq_var = tk.DoubleVar(value=LONG_AFK_FREQ_LEVEL * 100)
+    long_afk_freq_desc = tk.Label(container, bg=bg, fg=fg)
+    long_afk_freq_desc.pack()
+    def _update_long_desc(val: str) -> None:
+        f = clamp(float(val) / 100, 0.0, 1.0)
+        lmin = int((1 - f) * BASE_LONG_AFK_MIN_SECS + f * HIGH_LONG_AFK_MIN_SECS)
+        lmax = int((1 - f) * BASE_LONG_AFK_MAX_SECS + f * HIGH_LONG_AFK_MAX_SECS)
+        avg = (lmin + lmax) / 2
+        if avg >= 3600:
+            txt = f"about every {avg / 3600:.1f} hrs"
+        else:
+            txt = f"about every {int(avg / 60)} mins"
+        long_afk_freq_desc.config(text=txt)
     tk.Scale(
         container,
         variable=long_afk_freq_var,
@@ -359,7 +395,9 @@ def config_prompt():
         fg=fg,
         troughcolor="#444444",
         highlightthickness=0,
+        command=_update_long_desc,
     ).pack()
+    _update_long_desc(long_afk_freq_var.get())
 
     def _start():
         global ENABLE_OVERSHOOT, ENABLE_JITTER
