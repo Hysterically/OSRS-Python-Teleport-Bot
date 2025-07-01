@@ -54,3 +54,13 @@ On non-Windows systems the window is only shown when the `DISPLAY` environment v
 
 Press **1** at any time to pause or resume automation. Press **2** to show or hide the console window. Press **3** to stop the bot completely. If the teleport tab still cannot be found after the bot attempts to open it, it will press **F6** automatically as a fallback.
 
+## Building an executable
+
+Use the `build-exe.bat` script to create an executable version of the bot:
+
+```cmd
+build-exe.bat
+```
+
+The generated `EssayReview.exe` will appear inside the `dist` folder.
+
