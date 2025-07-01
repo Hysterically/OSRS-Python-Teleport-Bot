@@ -480,18 +480,7 @@ def update_afk_settings() -> None:
 pag.FAILSAFE = False
 pag.PAUSE = 0
 
-# ─────────────────── Teleport selection prompt ─────────────────────
-OPTIONS = {
-    "Varrock": os.path.join(ASSETS_DIR, "Var.png"),
-    "Falador": os.path.join(ASSETS_DIR, "Fal.png"),
-    "Camelot": os.path.join(ASSETS_DIR, "Cam.png"),
-}
 
-choice = None
-config_prompt()
-if choice is None:
-    sys.exit("No teleport selected – exiting.")
-TELEPORT_IMAGE = OPTIONS[choice]
 
 
 
@@ -643,6 +632,19 @@ class PinkNoise:
 
 
 pink = PinkNoise()
+
+# ─────────────────── Teleport selection prompt ─────────────────────
+OPTIONS = {
+    "Varrock": os.path.join(ASSETS_DIR, "Var.png"),
+    "Falador": os.path.join(ASSETS_DIR, "Fal.png"),
+    "Camelot": os.path.join(ASSETS_DIR, "Cam.png"),
+}
+
+choice = None
+config_prompt()
+if choice is None:
+    sys.exit("No teleport selected – exiting.")
+TELEPORT_IMAGE = OPTIONS[choice]
 
 # ───────────────── Anti-ban weights ────────────────────────────────
 # ───────────────── Anti-ban weights ────────────────────────────────
