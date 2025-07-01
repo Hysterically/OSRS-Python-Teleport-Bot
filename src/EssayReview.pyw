@@ -295,11 +295,6 @@ def config_prompt():
     tele_conf_var = tk.DoubleVar(value=TELEPORT_CONFIDENCE)
     ttk.Entry(container, textvariable=tele_conf_var, width=5).pack()
 
-    tk.Label(container, text="Short rest task chance:", bg=bg, fg=fg).pack(
-        pady=(10, 0)
-    )
-    short_rest_prob_var = tk.DoubleVar(value=SHORT_REST_TASK_PROB)
-    ttk.Entry(container, textvariable=short_rest_prob_var, width=5).pack()
 
     tk.Label(
         container,
@@ -405,7 +400,6 @@ def config_prompt():
         global ENABLE_AFK, ENABLE_ANTIBAN
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
-        global SHORT_REST_TASK_PROB
         global AFK_FREQ_LEVEL, MINI_AFK_FREQ_LEVEL, LONG_AFK_FREQ_LEVEL
         global ENABLE_POST_MOVE_DRIFT, POST_MOVE_DRIFT_PROB
         global ENABLE_PRE_CLICK_HOVER, PRE_CLICK_HOVER_PROB
@@ -428,12 +422,6 @@ def config_prompt():
             TELEPORT_CONFIDENCE = max(0.0, min(1.0, float(tele_conf_var.get())))
         except Exception:
             TELEPORT_CONFIDENCE = CONFIDENCE
-        try:
-            SHORT_REST_TASK_PROB = max(
-                0.0, min(1.0, float(short_rest_prob_var.get()))
-            )
-        except Exception:
-            SHORT_REST_TASK_PROB = 1.0
         try:
             MINI_AFK_FREQ_LEVEL = clamp(float(mini_afk_freq_var.get()) / 100, 0.0, 1.0)
         except Exception:
