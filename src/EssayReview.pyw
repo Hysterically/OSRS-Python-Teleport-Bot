@@ -47,13 +47,13 @@ SHORT_REST_TASK_PROB = 1.0
 
 # Human-like movement behaviours
 ENABLE_POST_MOVE_DRIFT = True
-POST_MOVE_DRIFT_PROB = 0.30
+POST_MOVE_DRIFT_PROB = 0.50
 ENABLE_PRE_CLICK_HOVER = True
-PRE_CLICK_HOVER_PROB = 0.30
+PRE_CLICK_HOVER_PROB = 0.50
 ENABLE_IDLE_WANDER = True
-IDLE_WANDER_PROB = 0.30
+IDLE_WANDER_PROB = 0.50
 ENABLE_WANDER_OFFSCREEN = True
-WANDER_OFFSCREEN_PROB = 0.30
+WANDER_OFFSCREEN_PROB = 0.90
 
 
 
@@ -455,25 +455,25 @@ def config_prompt():
                 0.0, min(1.0, float(post_drift_prob_var.get()) / 100)
             )
         except Exception:
-            POST_MOVE_DRIFT_PROB = 0.30
+            POST_MOVE_DRIFT_PROB = 0.50
         try:
             PRE_CLICK_HOVER_PROB = max(
                 0.0, min(1.0, float(pre_hover_prob_var.get()) / 100)
             )
         except Exception:
-            PRE_CLICK_HOVER_PROB = 0.30
+            PRE_CLICK_HOVER_PROB = 0.50
         try:
             IDLE_WANDER_PROB = max(
                 0.0, min(1.0, float(idle_wander_prob_var.get()) / 100)
             )
         except Exception:
-            IDLE_WANDER_PROB = 0.30
+            IDLE_WANDER_PROB = 0.50
         try:
             WANDER_OFFSCREEN_PROB = max(
                 0.0, min(1.0, float(offscreen_prob_var.get()) / 100)
             )
         except Exception:
-            WANDER_OFFSCREEN_PROB = 0.30
+            WANDER_OFFSCREEN_PROB = 0.90
         choice = tele_var.get()
         update_afk_settings()
         root.destroy()
