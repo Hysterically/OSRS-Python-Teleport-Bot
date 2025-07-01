@@ -141,6 +141,16 @@ def config_prompt():
     style.configure("TCheckbutton", background=bg, foreground=fg)
     style.configure("TButton", background="#444444", foreground=fg)
 
+    def _slider_colour(val: float) -> str:
+        f = clamp(float(val) / 100, 0.0, 1.0)
+        r = int(255 * (1 - f))
+        g = int(255 * f)
+        return f"#{r:02x}{g:02x}00"
+
+    def _update_scale_colour(scale: tk.Scale, val: str) -> None:
+        colour = _slider_colour(float(val))
+        scale.config(troughcolor=colour, activebackground=colour)
+
     container = ttk.Frame(root)
     container.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -315,7 +325,7 @@ def config_prompt():
         mini_afk_freq_desc.config(
             text=f"~{avg_burst} teleports then {avg_rest}s rest"
         )
-    tk.Scale(
+    mini_afk_scale = tk.Scale(
         container,
         variable=mini_afk_freq_var,
         from_=0,
@@ -324,10 +334,15 @@ def config_prompt():
         length=200,
         bg=bg,
         fg=fg,
-        troughcolor="#444444",
+        troughcolor=_slider_colour(mini_afk_freq_var.get()),
         highlightthickness=0,
-        command=_update_mini_afk_desc,
-    ).pack()
+        command=lambda v: (
+            _update_mini_afk_desc(v),
+            _update_scale_colour(mini_afk_scale, v),
+        ),
+    )
+    mini_afk_scale.pack()
+    _update_scale_colour(mini_afk_scale, mini_afk_freq_var.get())
     _update_mini_afk_desc(mini_afk_freq_var.get())
 
     tk.Label(
@@ -345,7 +360,7 @@ def config_prompt():
         smax = int((1 - f) * BASE_AFK_MAX_SECS + f * HIGH_AFK_MAX_SECS)
         avg = int((smin + smax) / 2 / 60)
         short_afk_freq_desc.config(text=f"about every {avg} mins")
-    tk.Scale(
+    short_afk_scale = tk.Scale(
         container,
         variable=short_afk_freq_var,
         from_=0,
@@ -354,10 +369,15 @@ def config_prompt():
         length=200,
         bg=bg,
         fg=fg,
-        troughcolor="#444444",
+        troughcolor=_slider_colour(short_afk_freq_var.get()),
         highlightthickness=0,
-        command=_update_short_desc,
-    ).pack()
+        command=lambda v: (
+            _update_short_desc(v),
+            _update_scale_colour(short_afk_scale, v),
+        ),
+    )
+    short_afk_scale.pack()
+    _update_scale_colour(short_afk_scale, short_afk_freq_var.get())
     _update_short_desc(short_afk_freq_var.get())
 
     tk.Label(
@@ -379,7 +399,7 @@ def config_prompt():
         else:
             txt = f"about every {int(avg / 60)} mins"
         long_afk_freq_desc.config(text=txt)
-    tk.Scale(
+    long_afk_scale = tk.Scale(
         container,
         variable=long_afk_freq_var,
         from_=0,
@@ -388,10 +408,15 @@ def config_prompt():
         length=200,
         bg=bg,
         fg=fg,
-        troughcolor="#444444",
+        troughcolor=_slider_colour(long_afk_freq_var.get()),
         highlightthickness=0,
-        command=_update_long_desc,
-    ).pack()
+        command=lambda v: (
+            _update_long_desc(v),
+            _update_scale_colour(long_afk_scale, v),
+        ),
+    )
+    long_afk_scale.pack()
+    _update_scale_colour(long_afk_scale, long_afk_freq_var.get())
     _update_long_desc(long_afk_freq_var.get())
 
     def _start():
