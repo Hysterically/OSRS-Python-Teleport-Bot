@@ -28,59 +28,19 @@ ROOT_DIR = os.path.abspath(os.path.join(PKG_DIR, os.pardir))
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 
 # Feature toggles ----------------------------------------------------
-# Move slightly past the target before coming back
-# to mimic how humans sometimes overshoot the cursor.
 ENABLE_OVERSHOOT = True
-
-# Add tiny wiggles during long mouse moves so the
-# cursor doesn't glide in a perfectly straight line.
 ENABLE_JITTER = True
-
-# Prevent unrealistic acceleration by capping how
-# quickly the mouse speed can change.
 ENABLE_VELOCITY_LIMIT = True
-
-# After moving to a rune, check the final mouse
-# position and correct drift before clicking.
 CHECK_FINAL_POS = True
-
-# Write every click position to the console
-# which helps diagnose missed clicks.
 LOG_CLICKS = True
-
-# Master switch for verbose debug output.
 DEBUG_LOGGING = False
-
-# Use a mouseDown → short pause → mouseUp sequence
-# for each click. This can be more reliable on some
-# systems than a regular quick click.
 ROBUST_CLICK = False
-
-# Toggle long and short AFK events. When disabled the bot will
-# never perform random idle breaks.
 ENABLE_AFK = True
-
-# Enable random anti-ban extras like double clicks or cursor wiggles.
 ENABLE_ANTIBAN = True
-
-# Additional optional behaviours
-# When enabled the bot may move the mouse over the stats tab during
-# short rests. Disabling this prevents any stats-hover actions.
 ENABLE_STATS_HOVER = True
-
-# During some breaks the bot scrolls a random Edge/YouTube window.
-# This can be turned off if no browser is running or it causes issues.
 ENABLE_BROWSER_AFK = True
-
-# If enabled the bot flips through random side tabs while idling.
 ENABLE_TAB_FLIP = True
-
-# Disable the brief rest between click bursts. When off the bot immediately
-# starts the next burst without pausing.
 ENABLE_REST = True
-
-# Chance that the bot performs any short AFK task during the brief rest
-# between bursts. Set between 0.0 (never) and 1.0 (always).
 SHORT_REST_TASK_PROB = 1.0
 
 
