@@ -58,7 +58,8 @@ Press **1** at any time to pause or resume automation. Press **2** to show or hi
 
 Use the `build-exe.bat` script to create an executable version of the bot. This
 script now includes the `assets` folder so the bundled executable can locate the
-image files it needs:
+image files it needs. `EssayReview.pyw` checks the `sys._MEIPASS` attribute when
+running from PyInstaller so the assets load correctly:
 
 ```cmd
 build-exe.bat

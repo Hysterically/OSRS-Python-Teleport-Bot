@@ -24,7 +24,7 @@ from datetime import datetime
 
 # absolute paths ------------------------------------------------------------
 PKG_DIR = os.path.dirname(__file__)
-ROOT_DIR = os.path.abspath(os.path.join(PKG_DIR, os.pardir))
+ROOT_DIR = getattr(sys, "_MEIPASS", os.path.abspath(os.path.join(PKG_DIR, os.pardir)))
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 
 # Feature toggles ----------------------------------------------------
