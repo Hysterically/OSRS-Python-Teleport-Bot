@@ -1045,52 +1045,83 @@ def default_rest(dur):
     click_magic_tab()
 
 
-def handle_short_rest(rest):
-    if rest < 0.25:
+def handle_afk(mode: str = "normal_afk", dur: float | None = None):
+    """Handle all AFK behaviour.
+
+    Parameters
+    ----------
+    mode : str, optional
+        "short_afk" for rest periods between bursts,
+        "normal_afk" for scheduled short breaks,
+        "long_afk" for scheduled long breaks.
+    dur : float | None, optional
+        Override duration in seconds. If ``None`` the duration is
+        determined automatically based on ``mode``.
+    """
+
+    global next_afk_time
+
+    if mode not in {"short_afk", "normal_afk", "long_afk"}:
+        debug(f"Invalid AFK mode: {mode}")
         return
-    if random.random() >= SHORT_REST_TASK_PROB:
-        time.sleep(rest)
-        click_magic_tab()
-        return
-    log(f"Short AFK task for {rest:.1f}s")
-    maybe_outlier_event("rest")
-    if ENABLE_STATS_HOVER and (
+
+    if mode in {"normal_afk", "long_afk"}:
+        if not ENABLE_AFK:
+            return
+        if dur is None and time.time() < next_afk_time:
+            debug("AFK not due yet")
+            return
+
+    if mode == "short_afk":
+        if dur is None or dur < 0.25:
+            return
+        if random.random() >= SHORT_REST_TASK_PROB:
+            time.sleep(dur)
+            click_magic_tab()
+            return
+        log(f"Short AFK task for {dur:.1f}s")
+    else:
+        is_long = mode == "long_afk"
+        if dur is None:
+            dur = (
+                gamma_between(53, 300, 2.1)
+                if is_long
+                else gamma_between(1, 47, 2.1)
+            )
+        log(f"{'Long' if is_long else 'Short'} AFK: {int(dur)} s")
+
+    ctx = "rest" if mode == "short_afk" else "afk"
+    maybe_outlier_event(ctx)
+
+    if mode == "short_afk" and ENABLE_STATS_HOVER and (
         STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB
     ):
-        if not stats_hover(rest):
-            default_rest(rest)
+        if not stats_hover(dur):
+            default_rest(dur)
     else:
-        default_rest(rest)
+        ch = random.random()
+        threshold = 0.60 if mode in {"short_afk", "long_afk"} else 0.50
+        if ENABLE_BROWSER_AFK and ch < threshold and click_edge_youtube():
+            scroll_loop(dur)
+        elif ENABLE_TAB_FLIP:
+            random_tab_loop(dur)
+        else:
+            if mode == "short_afk":
+                idle_wander()
+                wander_offscreen_then_return()
+                time.sleep(dur)
+            else:
+                end = time.time() + dur
+                while time.time() < end and bot_active:
+                    maybe_outlier_event("afk")
+                    idle_wander()
+                    wander_offscreen_then_return()
+                    time.sleep(0.5)
 
+    if mode in {"normal_afk", "long_afk"}:
+        next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
+        debug(f"Next AFK scheduled in {int(next_afk_time - time.time())} s")
 
-# ───────────────── AFK handler (unchanged) ────────────────────────
-
-
-def handle_afk():
-    global next_afk_time
-    if not ENABLE_AFK:
-        return
-    if time.time() < next_afk_time:
-        debug("AFK not due yet")
-        return
-    long_prob = random.betavariate(2.2, 5.0)
-    is_long = random.random() < long_prob
-    dur = gamma_between(53, 300, 2.1) if is_long else gamma_between(1, 47, 2.1)
-    log(f"{'Long' if is_long else 'Short'} AFK: {int(dur)} s")
-    ch = random.random()
-    if ENABLE_BROWSER_AFK and (ch < 0.60 if is_long else ch < 0.50) and click_edge_youtube():
-        scroll_loop(dur)
-    elif ENABLE_TAB_FLIP:
-        random_tab_loop(dur)
-    else:
-        end = time.time() + dur
-        while time.time() < end and bot_active:
-            maybe_outlier_event("afk")
-            idle_wander()
-            wander_offscreen_then_return()
-            time.sleep(0.5)
-    next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
-    debug(f"Next AFK scheduled in {int(next_afk_time - time.time())} s")
     click_magic_tab()
 
 # ───────────────── Click-spam session ─────────────────────────────
@@ -1211,7 +1242,7 @@ def spam_session():
 
         if ENABLE_REST:
             log(f"Burst done. Rest {rest:.1f}s...")
-            handle_short_rest(rest)
+            handle_afk("short_afk", rest)
         else:
             log("Burst done. Rest skipped.")
     finally:
