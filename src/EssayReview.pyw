@@ -177,8 +177,13 @@ def config_prompt():
 
     tk.Label(container, text="Options:", bg=bg, fg=fg).pack(pady=(10, 0))
 
+    options_frame = ttk.Frame(container)
+    options_frame.pack()
+    _switch_pos = [0, 0]
+    _switch_cols = 3
+
     def add_switch(label_text: str, var: tk.BooleanVar) -> None:
-        frame = ttk.Frame(container)
+        frame = ttk.Frame(options_frame)
         ttk.Label(frame, text=label_text).pack(side="left")
         btn_text = tk.StringVar(value="On" if var.get() else "Off")
 
@@ -198,10 +203,19 @@ def config_prompt():
             activeforeground=fg,
             selectcolor=bg,
         ).pack(side="right", padx=(10, 0))
-        frame.pack(pady=2)
+        frame.grid(row=_switch_pos[0], column=_switch_pos[1], sticky="w", padx=5, pady=2)
+        _switch_pos[1] += 1
+        if _switch_pos[1] >= _switch_cols:
+            _switch_pos[1] = 0
+            _switch_pos[0] += 1
+
+    move_frame = ttk.Frame(container)
+    move_frame.pack(pady=(10, 0))
+    _move_pos = [0, 0]
+    _move_cols = 2
 
     def add_move_setting(label_text: str, var: tk.BooleanVar, prob: tk.DoubleVar, info: str) -> None:
-        frame = ttk.Frame(container)
+        frame = ttk.Frame(move_frame)
         ttk.Label(frame, text=label_text).pack(side="left")
         btn_text = tk.StringVar(value="On" if var.get() else "Off")
 
@@ -223,7 +237,11 @@ def config_prompt():
         ).pack(side="left", padx=(10, 0))
         ttk.Entry(frame, textvariable=prob, width=5).pack(side="left", padx=(10, 0))
         ttk.Label(frame, text=info).pack(side="left", padx=(10, 0))
-        frame.pack(pady=2, fill="x")
+        frame.grid(row=_move_pos[0], column=_move_pos[1], sticky="w", padx=5, pady=2)
+        _move_pos[1] += 1
+        if _move_pos[1] >= _move_cols:
+            _move_pos[1] = 0
+            _move_pos[0] += 1
 
     add_switch("Mouse overshoot (aim past target)", over_var)
     add_switch("Mouse jitter (tiny wiggles)", jitter_var)
