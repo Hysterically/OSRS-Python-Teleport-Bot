@@ -565,10 +565,10 @@ MAGIC_TAB_CONFIDENCE = 0.80
 
 # ───────────────── Behaviour constants ────────────────────────────
 # Base values used when calculating AFK timing.
-BASE_SPAM_MIN, BASE_SPAM_MAX = 1, 70
+BASE_SPAM_MIN, BASE_SPAM_MAX = 1, 140
 BASE_REST_MIN, BASE_REST_MAX = 1, 40
-BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 60 * 60, 90 * 60  # 60–90 mins
-BASE_LONG_AFK_MIN_SECS, BASE_LONG_AFK_MAX_SECS = 4 * 60 * 60, 6 * 60 * 60  # 4–6h
+BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 30 * 60, 45 * 60  # 30–45 mins
+BASE_LONG_AFK_MIN_SECS, BASE_LONG_AFK_MAX_SECS = 2 * 60 * 60, 3 * 60 * 60  # 2–3h
 
 HIGH_SPAM_MAX = 20
 HIGH_REST_MIN, HIGH_REST_MAX = 5, 120
