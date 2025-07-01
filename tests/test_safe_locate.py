@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Dummy pyautogui that raises ValueError on locateOnScreen
+                                                          
 class DummyPag:
     def __init__(self):
         self.FAILSAFE = False
@@ -24,7 +24,7 @@ class DummyPag:
     def confirm(self, *a, **k):
         return 'Varrock'
 
-    # stubs required for module import
+                                      
     def moveTo(self, *a, **k):
         pass
     def moveRel(self, *a, **k):
