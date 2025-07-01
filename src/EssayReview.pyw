@@ -55,6 +55,10 @@ IDLE_WANDER_PROB = 0.30
 ENABLE_WANDER_OFFSCREEN = True
 WANDER_OFFSCREEN_PROB = 0.30
 
+# Level controlling how frequently the bot will take AFK breaks.
+# 0 = low frequency, 1 = high frequency.
+AFK_FREQ_LEVEL = 0.0
+
 
 
 
@@ -465,8 +469,6 @@ BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 60 * 60, 90 * 60  # 60–90 mins
 HIGH_SPAM_MAX = 20
 HIGH_REST_MIN, HIGH_REST_MAX = 5, 120
 HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60  # 5–15 mins
-
-AFK_FREQ_LEVEL = 0.0  # 0 = low frequency, 1 = high frequency
 
 SPAM_MIN, SPAM_MAX = BASE_SPAM_MIN, BASE_SPAM_MAX
 REST_MIN, REST_MAX = BASE_REST_MIN, BASE_REST_MAX
