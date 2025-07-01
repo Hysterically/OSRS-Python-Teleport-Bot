@@ -298,7 +298,7 @@ def config_prompt():
 
     tk.Label(
         container,
-        text="Mini-AFK Frequency: drag for shorter or longer rests",
+        text="Mini-AFK Chance: 0=never, 100=always",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
@@ -332,7 +332,7 @@ def config_prompt():
 
     tk.Label(
         container,
-        text="Short AFK Frequency: drag for more or fewer breaks",
+        text="Short AFK Chance: 0=never, 100=always",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
@@ -362,7 +362,7 @@ def config_prompt():
 
     tk.Label(
         container,
-        text="Long AFK Frequency: drag for rarer or more common long breaks",
+        text="Long AFK Chance: 0=never, 100=always",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
@@ -563,9 +563,9 @@ HIGH_REST_MIN, HIGH_REST_MAX = 5, 120
 HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60  # 5–15 mins
 HIGH_LONG_AFK_MIN_SECS, HIGH_LONG_AFK_MAX_SECS = 40 * 60, 80 * 60  # 40–80m
 
-MINI_AFK_FREQ_LEVEL = 0.0  # 0 = low frequency, 1 = high frequency
-AFK_FREQ_LEVEL = 0.0
-LONG_AFK_FREQ_LEVEL = 0.0
+MINI_AFK_FREQ_LEVEL = 0.5  # 0 = never, 1 = always
+AFK_FREQ_LEVEL = 0.5
+LONG_AFK_FREQ_LEVEL = 0.5
 
 SPAM_MIN, SPAM_MAX = BASE_SPAM_MIN, BASE_SPAM_MAX
 REST_MIN, REST_MAX = BASE_REST_MIN, BASE_REST_MAX
@@ -1252,15 +1252,29 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
         if dur is None and time.time() < next_short_afk_time:
             debug("AFK not due yet")
             return
+        if random.random() >= AFK_FREQ_LEVEL:
+            next_short_afk_time = time.time() + gamma_between(
+                AFK_MIN_SECS, AFK_MAX_SECS, 2.4
+            )
+            debug("AFK skipped")
+            return
     elif mode == "long_afk":
         if not ENABLE_AFK:
             return
         if dur is None and time.time() < next_long_afk_time:
             debug("Long AFK not due yet")
             return
+        if random.random() >= LONG_AFK_FREQ_LEVEL:
+            next_long_afk_time = time.time() + gamma_between(
+                LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS, 2.4
+            )
+            debug("Long AFK skipped")
+            return
 
     if mode == "short_afk":
         if dur is None or dur < 0.25:
+            return
+        if random.random() >= MINI_AFK_FREQ_LEVEL:
             return
         if random.random() >= SHORT_REST_TASK_PROB:
             time.sleep(dur)
