@@ -7,10 +7,12 @@
 import pygetwindow as gw
 import pyautogui as pag
 from pyautogui import ImageNotFoundException
+
 try:
     import keyboard
-except Exception:                                                  
+except Exception:
     from types import SimpleNamespace
+
     keyboard = SimpleNamespace(is_pressed=lambda *_a, **_k: False)
 import time
 import random
@@ -22,12 +24,14 @@ import traceback
 import ctypes
 from datetime import datetime
 
-                                                                             
+
 PKG_DIR = os.path.dirname(__file__)
-ROOT_DIR = getattr(sys, "_MEIPASS", os.path.abspath(os.path.join(PKG_DIR, os.pardir)))
+ROOT_DIR = getattr(
+    sys, "_MEIPASS", os.path.abspath(os.path.join(PKG_DIR, os.pardir))
+)
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 
-                                                                      
+
 ENABLE_OVERSHOOT = True
 ENABLE_JITTER = True
 ENABLE_VELOCITY_LIMIT = True
@@ -44,8 +48,6 @@ ENABLE_REST = True
 SHORT_REST_TASK_PROB = 1.0
 
 
-
-                                
 ENABLE_POST_MOVE_DRIFT = True
 POST_MOVE_DRIFT_PROB = 0.50
 ENABLE_PRE_CLICK_HOVER = True
@@ -56,9 +58,6 @@ ENABLE_WANDER_OFFSCREEN = True
 WANDER_OFFSCREEN_PROB = 0.90
 
 
-
-
-                                          
 CONFIDENCE = 0.80
 TELEPORT_CONFIDENCE = CONFIDENCE
 
@@ -77,7 +76,7 @@ def hide_console():
     global console_visible
     hwnd = _console_hwnd()
     if hwnd:
-        ctypes.windll.user32.ShowWindow(hwnd, 0)           
+        ctypes.windll.user32.ShowWindow(hwnd, 0)
         console_visible = False
 
 
@@ -85,7 +84,7 @@ def show_console():
     global console_visible
     hwnd = _console_hwnd()
     if hwnd:
-        ctypes.windll.user32.ShowWindow(hwnd, 5)           
+        ctypes.windll.user32.ShowWindow(hwnd, 5)
         console_visible = True
 
 
@@ -108,12 +107,13 @@ def log(msg: str):
 
 # ───────────────────── Config prompt ───────────────────────────────
 
+
 def config_prompt():
     """Interactive window for teleport and feature settings."""
     if "PYTEST_CURRENT_TEST" in os.environ or (
         os.name != "nt" and not os.environ.get("DISPLAY")
     ):
-                                                                      
+
         global choice
         choice = "Camelot"
         return choice
@@ -151,16 +151,28 @@ def config_prompt():
         colour = _slider_colour(float(val))
         scale.config(troughcolor=colour, activebackground=colour)
 
+    root.rowconfigure(0, weight=1)
+    root.columnconfigure(0, weight=1)
+
     container = ttk.Frame(root)
-    container.pack(fill="both", expand=True, padx=20, pady=20)
+    container.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+    container.columnconfigure(0, weight=1)
+    container.columnconfigure(1, weight=1)
+
+    left_frame = ttk.Frame(container)
+    left_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+
+    right_frame = ttk.Frame(container)
+    right_frame.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
 
     tele_var = tk.StringVar(value="Camelot")
-    tk.Label(container, text="Select teleport:", bg=bg, fg=fg).pack(
+    tk.Label(left_frame, text="Select teleport:", bg=bg, fg=fg).pack(
         pady=(10, 0)
     )
     for opt in OPTIONS.keys():
-        ttk.Radiobutton(container, text=opt, value=opt, variable=tele_var).pack(
-        )
+        ttk.Radiobutton(
+            left_frame, text=opt, value=opt, variable=tele_var
+        ).pack()
 
     over_var = tk.BooleanVar(value=ENABLE_OVERSHOOT)
     jitter_var = tk.BooleanVar(value=ENABLE_JITTER)
@@ -185,9 +197,9 @@ def config_prompt():
     offscreen_var = tk.BooleanVar(value=ENABLE_WANDER_OFFSCREEN)
     offscreen_prob_var = tk.DoubleVar(value=WANDER_OFFSCREEN_PROB * 100)
 
-    tk.Label(container, text="Options:", bg=bg, fg=fg).pack(pady=(10, 0))
+    tk.Label(left_frame, text="Options:", bg=bg, fg=fg).pack(pady=(10, 0))
 
-    options_frame = ttk.Frame(container)
+    options_frame = ttk.Frame(left_frame)
     options_frame.pack()
     _switch_pos = [0, 0]
     _switch_cols = 3
@@ -215,20 +227,28 @@ def config_prompt():
             activeforeground=fg,
             selectcolor=bg,
         ).pack(side="right", padx=(10, 0))
-        frame.grid(row=_switch_pos[0], column=_switch_pos[1], sticky="w", padx=5, pady=2)
+        frame.grid(
+            row=_switch_pos[0],
+            column=_switch_pos[1],
+            sticky="w",
+            padx=5,
+            pady=2,
+        )
         _switch_pos[1] += 1
         if _switch_pos[1] >= _switch_cols:
             _switch_pos[1] = 0
             _switch_pos[0] += 1
 
-    move_frame = ttk.Frame(container)
+    move_frame = ttk.Frame(right_frame)
     move_frame.pack(pady=(10, 0))
     _move_pos = [0, 0]
     _move_cols = 2
     for i in range(_move_cols):
         move_frame.columnconfigure(i, weight=1)
 
-    def add_move_setting(label_text: str, var: tk.BooleanVar, prob: tk.DoubleVar, info: str) -> None:
+    def add_move_setting(
+        label_text: str, var: tk.BooleanVar, prob: tk.DoubleVar, info: str
+    ) -> None:
         frame = ttk.Frame(move_frame)
         ttk.Label(frame, text=label_text).pack(side="left")
         btn_text = tk.StringVar(value="On" if var.get() else "Off")
@@ -249,9 +269,13 @@ def config_prompt():
             activeforeground=fg,
             selectcolor=bg,
         ).pack(side="left", padx=(10, 0))
-        ttk.Entry(frame, textvariable=prob, width=5).pack(side="left", padx=(10, 0))
+        ttk.Entry(frame, textvariable=prob, width=5).pack(
+            side="left", padx=(10, 0)
+        )
         ttk.Label(frame, text=info).pack(side="left", padx=(10, 0))
-        frame.grid(row=_move_pos[0], column=_move_pos[1], sticky="w", padx=5, pady=2)
+        frame.grid(
+            row=_move_pos[0], column=_move_pos[1], sticky="w", padx=5, pady=2
+        )
         _move_pos[1] += 1
         if _move_pos[1] >= _move_cols:
             _move_pos[1] = 0
@@ -271,9 +295,9 @@ def config_prompt():
     add_switch("Random tab flips when idle", tabflip_var)
     add_switch("Rest between bursts", rest_var)
 
-    tk.Label(container, text="Human-Like Movement Settings:", bg=bg, fg=fg).pack(
-        pady=(10, 0)
-    )
+    tk.Label(
+        right_frame, text="Human-Like Movement Settings:", bg=bg, fg=fg
+    ).pack(pady=(10, 0))
     add_move_setting(
         "Post-move drift",
         post_drift_var,
@@ -299,22 +323,22 @@ def config_prompt():
         "Moves off-screen briefly then returns",
     )
 
-    tk.Label(container, text="Teleport confidence:", bg=bg, fg=fg).pack(
+    tk.Label(left_frame, text="Teleport confidence:", bg=bg, fg=fg).pack(
         pady=(10, 0)
     )
     tele_conf_var = tk.DoubleVar(value=TELEPORT_CONFIDENCE)
-    ttk.Entry(container, textvariable=tele_conf_var, width=5).pack()
-
+    ttk.Entry(left_frame, textvariable=tele_conf_var, width=5).pack()
 
     tk.Label(
-        container,
+        right_frame,
         text="Mini-AFK Chance: 0=never, 100=always",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
     mini_afk_freq_var = tk.DoubleVar(value=MINI_AFK_FREQ_LEVEL * 100)
-    mini_afk_freq_desc = tk.Label(container, bg=bg, fg=fg)
+    mini_afk_freq_desc = tk.Label(right_frame, bg=bg, fg=fg)
     mini_afk_freq_desc.pack()
+
     def _update_mini_afk_desc(val: str) -> None:
         f = clamp(float(val) / 100, 0.0, 1.0)
         spam_max = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
@@ -325,8 +349,9 @@ def config_prompt():
         mini_afk_freq_desc.config(
             text=f"~{avg_burst} teleports then {avg_rest}s rest"
         )
+
     mini_afk_scale = tk.Scale(
-        container,
+        right_frame,
         variable=mini_afk_freq_var,
         from_=0,
         to=100,
@@ -346,22 +371,24 @@ def config_prompt():
     _update_mini_afk_desc(mini_afk_freq_var.get())
 
     tk.Label(
-        container,
+        right_frame,
         text="Short AFK Chance: 0=never, 100=always",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
     short_afk_freq_var = tk.DoubleVar(value=AFK_FREQ_LEVEL * 100)
-    short_afk_freq_desc = tk.Label(container, bg=bg, fg=fg)
+    short_afk_freq_desc = tk.Label(right_frame, bg=bg, fg=fg)
     short_afk_freq_desc.pack()
+
     def _update_short_desc(val: str) -> None:
         f = clamp(float(val) / 100, 0.0, 1.0)
         smin = int((1 - f) * BASE_AFK_MIN_SECS + f * HIGH_AFK_MIN_SECS)
         smax = int((1 - f) * BASE_AFK_MAX_SECS + f * HIGH_AFK_MAX_SECS)
         avg = int((smin + smax) / 2 / 60)
         short_afk_freq_desc.config(text=f"about every {avg} mins")
+
     short_afk_scale = tk.Scale(
-        container,
+        right_frame,
         variable=short_afk_freq_var,
         from_=0,
         to=100,
@@ -381,26 +408,32 @@ def config_prompt():
     _update_short_desc(short_afk_freq_var.get())
 
     tk.Label(
-        container,
+        right_frame,
         text="Long AFK Chance: 0=never, 100=always",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
     long_afk_freq_var = tk.DoubleVar(value=LONG_AFK_FREQ_LEVEL * 100)
-    long_afk_freq_desc = tk.Label(container, bg=bg, fg=fg)
+    long_afk_freq_desc = tk.Label(right_frame, bg=bg, fg=fg)
     long_afk_freq_desc.pack()
+
     def _update_long_desc(val: str) -> None:
         f = clamp(float(val) / 100, 0.0, 1.0)
-        lmin = int((1 - f) * BASE_LONG_AFK_MIN_SECS + f * HIGH_LONG_AFK_MIN_SECS)
-        lmax = int((1 - f) * BASE_LONG_AFK_MAX_SECS + f * HIGH_LONG_AFK_MAX_SECS)
+        lmin = int(
+            (1 - f) * BASE_LONG_AFK_MIN_SECS + f * HIGH_LONG_AFK_MIN_SECS
+        )
+        lmax = int(
+            (1 - f) * BASE_LONG_AFK_MAX_SECS + f * HIGH_LONG_AFK_MAX_SECS
+        )
         avg = (lmin + lmax) / 2
         if avg >= 3600:
             txt = f"about every {avg / 3600:.1f} hrs"
         else:
             txt = f"about every {int(avg / 60)} mins"
         long_afk_freq_desc.config(text=txt)
+
     long_afk_scale = tk.Scale(
-        container,
+        right_frame,
         variable=long_afk_freq_var,
         from_=0,
         to=100,
@@ -444,19 +477,27 @@ def config_prompt():
         ENABLE_TAB_FLIP = tabflip_var.get()
         ENABLE_REST = rest_var.get()
         try:
-            TELEPORT_CONFIDENCE = max(0.0, min(1.0, float(tele_conf_var.get())))
+            TELEPORT_CONFIDENCE = max(
+                0.0, min(1.0, float(tele_conf_var.get()))
+            )
         except Exception:
             TELEPORT_CONFIDENCE = CONFIDENCE
         try:
-            MINI_AFK_FREQ_LEVEL = clamp(float(mini_afk_freq_var.get()) / 100, 0.0, 1.0)
+            MINI_AFK_FREQ_LEVEL = clamp(
+                float(mini_afk_freq_var.get()) / 100, 0.0, 1.0
+            )
         except Exception:
             MINI_AFK_FREQ_LEVEL = 0.0
         try:
-            AFK_FREQ_LEVEL = clamp(float(short_afk_freq_var.get()) / 100, 0.0, 1.0)
+            AFK_FREQ_LEVEL = clamp(
+                float(short_afk_freq_var.get()) / 100, 0.0, 1.0
+            )
         except Exception:
             AFK_FREQ_LEVEL = 0.0
         try:
-            LONG_AFK_FREQ_LEVEL = clamp(float(long_afk_freq_var.get()) / 100, 0.0, 1.0)
+            LONG_AFK_FREQ_LEVEL = clamp(
+                float(long_afk_freq_var.get()) / 100, 0.0, 1.0
+            )
         except Exception:
             LONG_AFK_FREQ_LEVEL = 0.0
         ENABLE_POST_MOVE_DRIFT = post_drift_var.get()
@@ -491,8 +532,12 @@ def config_prompt():
         update_afk_settings()
         root.destroy()
 
-    ttk.Button(container, text="Start", command=_start).pack(pady=10)
-    root.protocol("WM_DELETE_WINDOW", lambda: sys.exit("No teleport selected – exiting."))
+    ttk.Button(root, text="Start", command=_start).grid(
+        row=1, column=0, pady=10
+    )
+    root.protocol(
+        "WM_DELETE_WINDOW", lambda: sys.exit("No teleport selected – exiting.")
+    )
     root.mainloop()
     return choice
 
@@ -516,8 +561,12 @@ def update_afk_settings() -> None:
     REST_MIN = int((1 - f_rest) * BASE_REST_MIN + f_rest * HIGH_REST_MIN)
     REST_MAX = int((1 - f_rest) * BASE_REST_MAX + f_rest * HIGH_REST_MAX)
 
-    AFK_MIN_SECS = int((1 - f_short) * BASE_AFK_MIN_SECS + f_short * HIGH_AFK_MIN_SECS)
-    AFK_MAX_SECS = int((1 - f_short) * BASE_AFK_MAX_SECS + f_short * HIGH_AFK_MAX_SECS)
+    AFK_MIN_SECS = int(
+        (1 - f_short) * BASE_AFK_MIN_SECS + f_short * HIGH_AFK_MIN_SECS
+    )
+    AFK_MAX_SECS = int(
+        (1 - f_short) * BASE_AFK_MAX_SECS + f_short * HIGH_AFK_MAX_SECS
+    )
 
     LONG_AFK_MIN_SECS = int(
         (1 - f_long) * BASE_LONG_AFK_MIN_SECS + f_long * HIGH_LONG_AFK_MIN_SECS
@@ -530,9 +579,6 @@ def update_afk_settings() -> None:
 # ───────────────────── PyAutoGUI tweaks ────────────────────────────
 pag.FAILSAFE = False
 pag.PAUSE = 0
-
-
-
 
 
 # ─────────────────── Safe locate wrapper ───────────────────────────
@@ -559,7 +605,7 @@ MAGIC_OPEN_IMAGE = os.path.join(ASSETS_DIR, "MagicTabOpen.png")
 PLAY_NOW_IMAGE = os.path.join(ASSETS_DIR, "PlayNow.png")
 CLICK_TO_PLAY_IMAGE = os.path.join(ASSETS_DIR, "ClickHereToPlay.png")
 
-TAB_IMAGES = [                                       
+TAB_IMAGES = [
     os.path.join(ASSETS_DIR, "CombatTab.png"),
     os.path.join(ASSETS_DIR, "EmojiTab.png"),
     os.path.join(ASSETS_DIR, "FriendsListTab.png"),
@@ -573,30 +619,30 @@ TAB_IMAGES = [
 # ───────────────── Confidence levels ───────────────────────────────
 STATS_CONFIDENCE = 0.80
 OPEN_CONFIDENCE = 0.85
-                                             
+
 MAGIC_TAB_CONFIDENCE = 0.80
 
 # ───────────────── Behaviour constants ────────────────────────────
-                                               
+
 BASE_SPAM_MIN, BASE_SPAM_MAX = 1, 140
 BASE_REST_MIN, BASE_REST_MAX = 1, 40
-BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 30 * 60, 45 * 60              
-BASE_LONG_AFK_MIN_SECS, BASE_LONG_AFK_MAX_SECS = 2 * 60 * 60, 3 * 60 * 60        
+BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 30 * 60, 45 * 60
+BASE_LONG_AFK_MIN_SECS, BASE_LONG_AFK_MAX_SECS = 2 * 60 * 60, 3 * 60 * 60
 
 HIGH_SPAM_MAX = 20
 HIGH_REST_MIN, HIGH_REST_MAX = 5, 120
-HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60             
-HIGH_LONG_AFK_MIN_SECS, HIGH_LONG_AFK_MAX_SECS = 40 * 60, 80 * 60          
+HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60
+HIGH_LONG_AFK_MIN_SECS, HIGH_LONG_AFK_MAX_SECS = 40 * 60, 80 * 60
 
-MINI_AFK_FREQ_LEVEL = 0.5                         
+MINI_AFK_FREQ_LEVEL = 0.5
 AFK_FREQ_LEVEL = 0.5
 LONG_AFK_FREQ_LEVEL = 0.5
 
 SPAM_MIN, SPAM_MAX = BASE_SPAM_MIN, BASE_SPAM_MAX
 REST_MIN, REST_MAX = BASE_REST_MIN, BASE_REST_MAX
 CLICK_MIN_GAP, CLICK_MAX_GAP = 0.06, 1.00
-                                                     
-                          
+
+
 CLICK_HOLD_MIN, CLICK_HOLD_MAX = 0.010, 0.060
 AFK_MIN_SECS, AFK_MAX_SECS = BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS
 LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS = (
@@ -604,14 +650,13 @@ LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS = (
     BASE_LONG_AFK_MAX_SECS,
 )
 SEGMENT_MIN, SEGMENT_MAX = 3, 6
-                                                                          
-                                                                              
-                       
+
+
 OVERSHOOT_MIN, OVERSHOOT_MAX = 4, 8
 LOOP_MEAN, LOOP_SD = 10, 2
 
-MAX_ACCEL = 8000                                     
-SMOOTH_STOP_DIST = 40                                                 
+MAX_ACCEL = 8000
+SMOOTH_STOP_DIST = 40
 
 STATS_REST_PROB = 0.10
 STATS_REST_TEST_MODE = False
@@ -624,13 +669,13 @@ TWEEN_FUNCS = [
     pag.easeInOutCubic,
 ]
 
-                                      
-JITTER_PROB = 0.1                                    
-JITTER_PIXELS = 1                               
-JITTER_DIST_THRESHOLD = 100                                          
+
+JITTER_PROB = 0.1
+JITTER_PIXELS = 1
+JITTER_DIST_THRESHOLD = 100
 JITTER_PAUSE_MIN, JITTER_PAUSE_MAX = 0.003, 0.010
 
-                                                                  
+
 LOGIN_RETRY_SECS = 180
 
 # ───────────────── Runtime state ───────────────────────────────────
@@ -644,8 +689,8 @@ overshoot_chance = 0.30
 last_move_velocities: list[float] = []
 teleport_last_seen = time.time()
 last_login_attempt = 0.0
-                                                  
-                                     
+
+
 in_spam_session = False
 
 # ───────────────── Maths helpers ───────────────────────────────────
@@ -739,7 +784,9 @@ def maybe_outlier_event(ctx: str):
     odds = {"burst": 0.0006, "rest": 0.0008, "afk": 0.0010}
     if random.random() > odds.get(ctx, 0.0006):
         return
-    event = random.choice(["corner_drift", "off_click", "scroll_spam", "camera_circle"])
+    event = random.choice(
+        ["corner_drift", "off_click", "scroll_spam", "camera_circle"]
+    )
     log(f"⚠️ Outlier event: {event} during {ctx}")
     if event == "corner_drift":
         start = pag.position()
@@ -841,11 +888,14 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
     path = _smooth_path(path)
     W = random.uniform(32, 48)
     seg_lens = [
-        math.hypot(px - sx, py - sy) for (sx, sy), (px, py) in zip(path[:-1], path[1:])
+        math.hypot(px - sx, py - sy)
+        for (sx, sy), (px, py) in zip(path[:-1], path[1:])
     ]
     total = sum(seg_lens) or 1
-    T = fitts_time(total, W, a=random.uniform(0.04, 0.06), b=random.uniform(0.04, 0.07))
-                                                       
+    T = fitts_time(
+        total, W, a=random.uniform(0.04, 0.06), b=random.uniform(0.04, 0.07)
+    )
+
     T *= random.uniform(1.6, 2.4)
 
     def _sig(t: float, k: float = 8.0) -> float:
@@ -865,7 +915,9 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
     last_move_velocities = []
     prev_v = 0.0
     dist_done = 0.0
-    for (px, py), seg_len, t0, t1 in zip(path[1:], seg_lens, times[:-1], times[1:]):
+    for (px, py), seg_len, t0, t1 in zip(
+        path[1:], seg_lens, times[:-1], times[1:]
+    ):
         remaining = total - dist_done
         seg_T = (t1 - t0) * random.uniform(0.9, 1.1)
         seg_T = clamp(seg_T, 0.01, 0.90)
@@ -880,7 +932,9 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
             else:
                 disc = prev_v**2 - 4 * MAX_ACCEL * seg_len
                 if disc > 0 and prev_v > 0:
-                    seg_T = max(seg_T, (prev_v + math.sqrt(disc)) / (2 * MAX_ACCEL))
+                    seg_T = max(
+                        seg_T, (prev_v + math.sqrt(disc)) / (2 * MAX_ACCEL)
+                    )
                 elif prev_v > 0:
                     seg_T = max(seg_T, seg_len / prev_v)
                 else:
@@ -895,9 +949,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
                 seg_T = clamp(seg_T, 0.01, 0.90)
                 v = seg_len / seg_T
         last_move_velocities.append(v)
-        debug(
-            f"seg to {(px, py)} len={seg_len:.1f} T={seg_T:.3f} v={v:.1f}"
-        )
+        debug(f"seg to {(px, py)} len={seg_len:.1f} T={seg_T:.3f} v={v:.1f}")
         pag.moveTo(px, py, duration=seg_T, tween=random.choice(TWEEN_FUNCS))
         if (
             ENABLE_JITTER
@@ -912,17 +964,19 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
         prev_v = v
         dist_done += seg_len
 
-                                                  
     pag.moveTo(tx, ty)
     debug(f"move complete at {pag.position()}")
 
 
 def idle_wiggle():
     x, y = pag.position()
-    pag.moveTo(x + pink.next(), y + pink.next(), duration=random.uniform(0.02, 0.05))
+    pag.moveTo(
+        x + pink.next(), y + pink.next(), duration=random.uniform(0.02, 0.05)
+    )
 
 
 # ───────────────── Human-like extras ──────────────────────────────
+
 
 def post_move_drift():
     """Slight cursor drift after a move."""
@@ -1025,9 +1079,13 @@ def _hover_jitter_variant_b():
 
 
 def click_magic_tab():
-    if safe_locate(MAGIC_OPEN_IMAGE, confidence=OPEN_CONFIDENCE, grayscale=True):
+    if safe_locate(
+        MAGIC_OPEN_IMAGE, confidence=OPEN_CONFIDENCE, grayscale=True
+    ):
         return True
-    tab = safe_locate(MAGIC_TAB_IMAGE, confidence=MAGIC_TAB_CONFIDENCE, grayscale=True)
+    tab = safe_locate(
+        MAGIC_TAB_IMAGE, confidence=MAGIC_TAB_CONFIDENCE, grayscale=True
+    )
     if tab:
         tx, ty = pag.center(tab)
         bezier_move(tx, ty)
@@ -1056,7 +1114,9 @@ def login(timeout: float = 15.0) -> bool:
     pag.click()
     end = time.time() + timeout
     while time.time() < end:
-        click = safe_locate(CLICK_TO_PLAY_IMAGE, confidence=CONFIDENCE, grayscale=True)
+        click = safe_locate(
+            CLICK_TO_PLAY_IMAGE, confidence=CONFIDENCE, grayscale=True
+        )
         if click:
             tx, ty = pag.center(click)
             bezier_move(tx, ty)
@@ -1105,7 +1165,8 @@ def edge_windows():
     return [
         w
         for w in gw.getAllWindows()
-        if not w.isMinimized and ("Edge" in w.title or "Microsoft Edge" in w.title)
+        if not w.isMinimized
+        and ("Edge" in w.title or "Microsoft Edge" in w.title)
     ]
 
 
@@ -1157,7 +1218,9 @@ def scroll_loop(dur: float) -> None:
                 pag.doubleClick()
             next_click = time.time() + clamp(random.gauss(4.0, 1.5), 1.0, 8.0)
         if time.time() >= next_pause:
-            pause = clamp(random.gauss(15.0, 5.0), 5.0, max(0.0, end - time.time()))
+            pause = clamp(
+                random.gauss(15.0, 5.0), 5.0, max(0.0, end - time.time())
+            )
             micro_jitter(pause)
             next_pause = time.time() + clamp(random.gauss(15.0, 5.0), 5.0, dur)
         time.sleep(random.uniform(0.5, 1.4))
@@ -1168,7 +1231,7 @@ def scroll_loop(dur: float) -> None:
 
 def random_tab_loop(duration):
     log(f"Short AFK: tab flipping for {duration:.1f}s")
-    mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)                          
+    mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)
     lam = 1.0 / mu
     t_next = time.time() + random.expovariate(lam)
     end = time.time() + duration
@@ -1198,7 +1261,9 @@ def random_tab_loop(duration):
 
 def stats_hover(dur) -> bool:
     log(f"Short AFK: hovering stats for {dur:.1f}s")
-    stats = safe_locate(STATS_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True)
+    stats = safe_locate(
+        STATS_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True
+    )
     if not stats:
         return False
     tx, ty = pag.center(stats)
@@ -1207,7 +1272,9 @@ def stats_hover(dur) -> bool:
     pre_click_hover(tx, ty)
     pag.click()
     time.sleep(0.2)
-    magic = safe_locate(MAGICLVL_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True)
+    magic = safe_locate(
+        MAGICLVL_IMAGE, confidence=STATS_CONFIDENCE, grayscale=True
+    )
     if not magic:
         return False
     tx, ty = pag.center(magic)
@@ -1319,8 +1386,10 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
     ctx = "rest" if mode == "short_afk" else "afk"
     maybe_outlier_event(ctx)
 
-    if mode == "short_afk" and ENABLE_STATS_HOVER and (
-        STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB
+    if (
+        mode == "short_afk"
+        and ENABLE_STATS_HOVER
+        and (STATS_REST_TEST_MODE or random.random() < STATS_REST_PROB)
     ):
         if not stats_hover(dur):
             default_rest(dur)
@@ -1361,6 +1430,7 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
 
     click_magic_tab()
 
+
 # ───────────────── Click-spam session ─────────────────────────────
 def spam_session():
     """Single teleport spam burst."""
@@ -1370,7 +1440,6 @@ def spam_session():
         burst = gaussian_between(SPAM_MIN, SPAM_MAX)
         rest = gaussian_between(REST_MIN, REST_MAX)
 
-                                               
         click_magic_tab()
 
         loc = safe_locate(
@@ -1389,7 +1458,9 @@ def spam_session():
                 pag.press("f6")
                 time.sleep(0.5)
                 loc = safe_locate(
-                    TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
+                    TELEPORT_IMAGE,
+                    confidence=TELEPORT_CONFIDENCE,
+                    grayscale=True,
                 )
                 if not loc:
                     log("Teleport rune still not found; skipping burst.")
@@ -1398,7 +1469,7 @@ def spam_session():
 
         global teleport_last_seen
         teleport_last_seen = time.time()
-                                    
+
         x, y = pag.center(loc)
         y += 3
         log(f"Click burst {burst:.1f}s at ({x}, {y})")
@@ -1409,8 +1480,6 @@ def spam_session():
             handle_afk("long_afk")
             maybe_outlier_event("burst")
 
-                                                                     
-                                                                         
             drift_x = random.gauss(0, 0.3)
             drift_y = random.gauss(0, 0.3)
             if abs(drift_x) < 0.3:
@@ -1422,7 +1491,6 @@ def spam_session():
             target_y = y + int(round(drift_y))
             bezier_move(target_x, target_y)
 
-                                                               
             if CHECK_FINAL_POS:
                 fx, fy = pag.position()
                 if math.hypot(fx - target_x, fy - target_y) > 3:
@@ -1439,7 +1507,6 @@ def spam_session():
             if LOG_CLICKS:
                 debug(f"click at {pag.position()}")
 
-                                                        
             if ROBUST_CLICK:
                 pag.mouseDown()
                 time.sleep(random.uniform(CLICK_HOLD_MIN, CLICK_HOLD_MAX))
@@ -1450,7 +1517,6 @@ def spam_session():
             if LOG_CLICKS:
                 debug("click issued")
 
-                                                            
             if CHECK_FINAL_POS:
                 chk = safe_locate(
                     TELEPORT_IMAGE,
@@ -1485,7 +1551,6 @@ def spam_session():
             log("Burst done. Rest skipped.")
     finally:
         in_spam_session = False
-
 
 
 # ───────────────── Hotkey thread ──────────────────────────────────
