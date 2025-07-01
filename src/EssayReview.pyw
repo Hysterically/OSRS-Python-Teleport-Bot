@@ -303,14 +303,54 @@ def config_prompt():
 
     tk.Label(
         container,
-        text="AFK Frequency: Drag to make breaks more or less frequent",
+        text="Rest Frequency: drag for shorter or longer rests",
         bg=bg,
         fg=fg,
     ).pack(pady=(10, 0))
-    afk_freq_var = tk.DoubleVar(value=AFK_FREQ_LEVEL * 100)
+    rest_freq_var = tk.DoubleVar(value=REST_FREQ_LEVEL * 100)
     tk.Scale(
         container,
-        variable=afk_freq_var,
+        variable=rest_freq_var,
+        from_=0,
+        to=100,
+        orient="horizontal",
+        length=200,
+        bg=bg,
+        fg=fg,
+        troughcolor="#444444",
+        highlightthickness=0,
+    ).pack()
+
+    tk.Label(
+        container,
+        text="Short AFK Frequency: drag for more or fewer breaks",
+        bg=bg,
+        fg=fg,
+    ).pack(pady=(10, 0))
+    short_afk_freq_var = tk.DoubleVar(value=AFK_FREQ_LEVEL * 100)
+    tk.Scale(
+        container,
+        variable=short_afk_freq_var,
+        from_=0,
+        to=100,
+        orient="horizontal",
+        length=200,
+        bg=bg,
+        fg=fg,
+        troughcolor="#444444",
+        highlightthickness=0,
+    ).pack()
+
+    tk.Label(
+        container,
+        text="Long AFK Frequency: drag for rarer or more common long breaks",
+        bg=bg,
+        fg=fg,
+    ).pack(pady=(10, 0))
+    long_afk_freq_var = tk.DoubleVar(value=LONG_AFK_FREQ_LEVEL * 100)
+    tk.Scale(
+        container,
+        variable=long_afk_freq_var,
         from_=0,
         to=100,
         orient="horizontal",
@@ -328,7 +368,7 @@ def config_prompt():
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
         global SHORT_REST_TASK_PROB
-        global AFK_FREQ_LEVEL
+        global AFK_FREQ_LEVEL, REST_FREQ_LEVEL, LONG_AFK_FREQ_LEVEL
         global ENABLE_POST_MOVE_DRIFT, POST_MOVE_DRIFT_PROB
         global ENABLE_PRE_CLICK_HOVER, PRE_CLICK_HOVER_PROB
         global ENABLE_IDLE_WANDER, IDLE_WANDER_PROB
@@ -357,9 +397,17 @@ def config_prompt():
         except Exception:
             SHORT_REST_TASK_PROB = 1.0
         try:
-            AFK_FREQ_LEVEL = clamp(float(afk_freq_var.get()) / 100, 0.0, 1.0)
+            REST_FREQ_LEVEL = clamp(float(rest_freq_var.get()) / 100, 0.0, 1.0)
+        except Exception:
+            REST_FREQ_LEVEL = 0.0
+        try:
+            AFK_FREQ_LEVEL = clamp(float(short_afk_freq_var.get()) / 100, 0.0, 1.0)
         except Exception:
             AFK_FREQ_LEVEL = 0.0
+        try:
+            LONG_AFK_FREQ_LEVEL = clamp(float(long_afk_freq_var.get()) / 100, 0.0, 1.0)
+        except Exception:
+            LONG_AFK_FREQ_LEVEL = 0.0
         ENABLE_POST_MOVE_DRIFT = post_drift_var.get()
         ENABLE_PRE_CLICK_HOVER = pre_hover_var.get()
         ENABLE_IDLE_WANDER = idle_wander_var.get()
@@ -402,20 +450,30 @@ def config_prompt():
 
 
 def update_afk_settings() -> None:
-    """Update AFK-related timing based on ``AFK_FREQ_LEVEL``."""
+    """Update AFK-related timing based on frequency sliders."""
     global SPAM_MIN, SPAM_MAX, REST_MIN, REST_MAX
     global AFK_MIN_SECS, AFK_MAX_SECS
+    global LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS
 
-    f = clamp(AFK_FREQ_LEVEL, 0.0, 1.0)
+    f_rest = clamp(REST_FREQ_LEVEL, 0.0, 1.0)
+    f_short = clamp(AFK_FREQ_LEVEL, 0.0, 1.0)
+    f_long = clamp(LONG_AFK_FREQ_LEVEL, 0.0, 1.0)
 
     SPAM_MIN = BASE_SPAM_MIN
-    SPAM_MAX = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
+    SPAM_MAX = int((1 - f_rest) * BASE_SPAM_MAX + f_rest * HIGH_SPAM_MAX)
 
-    REST_MIN = int((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN)
-    REST_MAX = int((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX)
+    REST_MIN = int((1 - f_rest) * BASE_REST_MIN + f_rest * HIGH_REST_MIN)
+    REST_MAX = int((1 - f_rest) * BASE_REST_MAX + f_rest * HIGH_REST_MAX)
 
-    AFK_MIN_SECS = int((1 - f) * BASE_AFK_MIN_SECS + f * HIGH_AFK_MIN_SECS)
-    AFK_MAX_SECS = int((1 - f) * BASE_AFK_MAX_SECS + f * HIGH_AFK_MAX_SECS)
+    AFK_MIN_SECS = int((1 - f_short) * BASE_AFK_MIN_SECS + f_short * HIGH_AFK_MIN_SECS)
+    AFK_MAX_SECS = int((1 - f_short) * BASE_AFK_MAX_SECS + f_short * HIGH_AFK_MAX_SECS)
+
+    LONG_AFK_MIN_SECS = int(
+        (1 - f_long) * BASE_LONG_AFK_MIN_SECS + f_long * HIGH_LONG_AFK_MIN_SECS
+    )
+    LONG_AFK_MAX_SECS = int(
+        (1 - f_long) * BASE_LONG_AFK_MAX_SECS + f_long * HIGH_LONG_AFK_MAX_SECS
+    )
 
 
 # ───────────────────── PyAutoGUI tweaks ────────────────────────────
@@ -483,12 +541,16 @@ MAGIC_TAB_CONFIDENCE = 0.80
 BASE_SPAM_MIN, BASE_SPAM_MAX = 1, 70
 BASE_REST_MIN, BASE_REST_MAX = 1, 40
 BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 60 * 60, 90 * 60  # 60–90 mins
+BASE_LONG_AFK_MIN_SECS, BASE_LONG_AFK_MAX_SECS = 4 * 60 * 60, 6 * 60 * 60  # 4–6h
 
 HIGH_SPAM_MAX = 20
 HIGH_REST_MIN, HIGH_REST_MAX = 5, 120
 HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60  # 5–15 mins
+HIGH_LONG_AFK_MIN_SECS, HIGH_LONG_AFK_MAX_SECS = 40 * 60, 80 * 60  # 40–80m
 
-AFK_FREQ_LEVEL = 0.0  # 0 = low frequency, 1 = high frequency
+REST_FREQ_LEVEL = 0.0  # 0 = low frequency, 1 = high frequency
+AFK_FREQ_LEVEL = 0.0
+LONG_AFK_FREQ_LEVEL = 0.0
 
 SPAM_MIN, SPAM_MAX = BASE_SPAM_MIN, BASE_SPAM_MAX
 REST_MIN, REST_MAX = BASE_REST_MIN, BASE_REST_MAX
@@ -497,6 +559,10 @@ CLICK_MIN_GAP, CLICK_MAX_GAP = 0.06, 1.00
 # ROBUST_CLICK is enabled.
 CLICK_HOLD_MIN, CLICK_HOLD_MAX = 0.010, 0.060
 AFK_MIN_SECS, AFK_MAX_SECS = BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS
+LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS = (
+    BASE_LONG_AFK_MIN_SECS,
+    BASE_LONG_AFK_MAX_SECS,
+)
 SEGMENT_MIN, SEGMENT_MAX = 3, 6
 # Overshoot range for mouse movement (pixels). When the cursor distance is
 # small the overshoot amount is scaled down so movements between adjacent tabs
@@ -531,7 +597,8 @@ LOGIN_RETRY_SECS = 180
 bot_active = True
 loop_counter = 0
 next_weight_refresh = 0
-next_afk_time = 0
+next_short_afk_time = 0
+next_long_afk_time = 0
 anti_ban_weights = {}
 overshoot_chance = 0.30
 last_move_velocities: list[float] = []
@@ -582,7 +649,8 @@ pink = PinkNoise()
 
 
 def refresh_weights():
-    global anti_ban_weights, overshoot_chance, next_afk_time
+    global anti_ban_weights, overshoot_chance
+    global next_short_afk_time, next_long_afk_time
     anti_ban_weights = {
         "drift_click_timing": clamp(random.gauss(0.5, 0.2), 0.1, 0.9),
         "idle_wiggle": clamp(random.gauss(0.4, 0.15), 0.05, 0.8),
@@ -591,9 +659,15 @@ def refresh_weights():
     }
     overshoot_chance = clamp(random.gauss(0.3, 0.08), 0.1, 0.5)
     if ENABLE_AFK:
-        next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
+        next_short_afk_time = time.time() + gamma_between(
+            AFK_MIN_SECS, AFK_MAX_SECS, 2.4
+        )
+        next_long_afk_time = time.time() + gamma_between(
+            LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS, 2.4
+        )
     else:
-        next_afk_time = float("inf")
+        next_short_afk_time = float("inf")
+        next_long_afk_time = float("inf")
     log("Anti-ban settings updated.")
 
 
@@ -1138,17 +1212,23 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
         determined automatically based on ``mode``.
     """
 
-    global next_afk_time
+    global next_short_afk_time, next_long_afk_time
 
     if mode not in {"short_afk", "normal_afk", "long_afk"}:
         debug(f"Invalid AFK mode: {mode}")
         return
 
-    if mode in {"normal_afk", "long_afk"}:
+    if mode == "normal_afk":
         if not ENABLE_AFK:
             return
-        if dur is None and time.time() < next_afk_time:
+        if dur is None and time.time() < next_short_afk_time:
             debug("AFK not due yet")
+            return
+    elif mode == "long_afk":
+        if not ENABLE_AFK:
+            return
+        if dur is None and time.time() < next_long_afk_time:
+            debug("Long AFK not due yet")
             return
 
     if mode == "short_afk":
@@ -1197,9 +1277,20 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
                     wander_offscreen_then_return()
                     time.sleep(0.5)
 
-    if mode in {"normal_afk", "long_afk"}:
-        next_afk_time = time.time() + gamma_between(AFK_MIN_SECS, AFK_MAX_SECS, 2.4)
-        debug(f"Next AFK scheduled in {int(next_afk_time - time.time())} s")
+    if mode == "normal_afk":
+        next_short_afk_time = time.time() + gamma_between(
+            AFK_MIN_SECS, AFK_MAX_SECS, 2.4
+        )
+        debug(
+            f"Next AFK scheduled in {int(next_short_afk_time - time.time())} s"
+        )
+    elif mode == "long_afk":
+        next_long_afk_time = time.time() + gamma_between(
+            LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS, 2.4
+        )
+        debug(
+            f"Next long AFK scheduled in {int(next_long_afk_time - time.time())} s"
+        )
 
     click_magic_tab()
 
@@ -1248,6 +1339,7 @@ def spam_session():
         end = time.time() + burst
         while time.time() < end and bot_active:
             handle_afk()
+            handle_afk("long_afk")
             maybe_outlier_event("burst")
 
             # add a little randomness around the centre point using a
@@ -1364,6 +1456,7 @@ def main_loop():
                 abs(random.gauss(LOOP_MEAN, LOOP_SD)) + 1
             )
         handle_afk()
+        handle_afk("long_afk")
         spam_session()
 
 
