@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Dummy pyautogui module to avoid GUI dependencies
+                                                  
 class DummyPag:
     def __init__(self):
         self._pos = [0, 0]

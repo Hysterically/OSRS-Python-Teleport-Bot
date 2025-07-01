@@ -9,7 +9,7 @@ import pyautogui as pag
 from pyautogui import ImageNotFoundException
 try:
     import keyboard
-except Exception:  # pragma: no cover - keyboard may be unavailable
+except Exception:                                                  
     from types import SimpleNamespace
     keyboard = SimpleNamespace(is_pressed=lambda *_a, **_k: False)
 import time
@@ -22,12 +22,12 @@ import traceback
 import ctypes
 from datetime import datetime
 
-# absolute paths ------------------------------------------------------------
+                                                                             
 PKG_DIR = os.path.dirname(__file__)
 ROOT_DIR = getattr(sys, "_MEIPASS", os.path.abspath(os.path.join(PKG_DIR, os.pardir)))
 ASSETS_DIR = os.path.join(ROOT_DIR, "assets")
 
-# Feature toggles ----------------------------------------------------
+                                                                      
 ENABLE_OVERSHOOT = True
 ENABLE_JITTER = True
 ENABLE_VELOCITY_LIMIT = True
@@ -45,7 +45,7 @@ SHORT_REST_TASK_PROB = 1.0
 
 
 
-# Human-like movement behaviours
+                                
 ENABLE_POST_MOVE_DRIFT = True
 POST_MOVE_DRIFT_PROB = 0.50
 ENABLE_PRE_CLICK_HOVER = True
@@ -58,7 +58,7 @@ WANDER_OFFSCREEN_PROB = 0.90
 
 
 
-# Default confidence for image recognition
+                                          
 CONFIDENCE = 0.80
 TELEPORT_CONFIDENCE = CONFIDENCE
 
@@ -77,7 +77,7 @@ def hide_console():
     global console_visible
     hwnd = _console_hwnd()
     if hwnd:
-        ctypes.windll.user32.ShowWindow(hwnd, 0)  # SW_HIDE
+        ctypes.windll.user32.ShowWindow(hwnd, 0)           
         console_visible = False
 
 
@@ -85,7 +85,7 @@ def show_console():
     global console_visible
     hwnd = _console_hwnd()
     if hwnd:
-        ctypes.windll.user32.ShowWindow(hwnd, 5)  # SW_SHOW
+        ctypes.windll.user32.ShowWindow(hwnd, 5)           
         console_visible = True
 
 
@@ -113,7 +113,7 @@ def config_prompt():
     if "PYTEST_CURRENT_TEST" in os.environ or (
         os.name != "nt" and not os.environ.get("DISPLAY")
     ):
-        # during automated tests or headless environments use defaults
+                                                                      
         global choice
         choice = "Camelot"
         return choice
@@ -559,7 +559,7 @@ MAGIC_OPEN_IMAGE = os.path.join(ASSETS_DIR, "MagicTabOpen.png")
 PLAY_NOW_IMAGE = os.path.join(ASSETS_DIR, "PlayNow.png")
 CLICK_TO_PLAY_IMAGE = os.path.join(ASSETS_DIR, "ClickHereToPlay.png")
 
-TAB_IMAGES = [  # side-panel sprites for random flips
+TAB_IMAGES = [                                       
     os.path.join(ASSETS_DIR, "CombatTab.png"),
     os.path.join(ASSETS_DIR, "EmojiTab.png"),
     os.path.join(ASSETS_DIR, "FriendsListTab.png"),
@@ -573,30 +573,30 @@ TAB_IMAGES = [  # side-panel sprites for random flips
 # ───────────────── Confidence levels ───────────────────────────────
 STATS_CONFIDENCE = 0.80
 OPEN_CONFIDENCE = 0.85
-# Lowered threshold for locating MagicTab.png
+                                             
 MAGIC_TAB_CONFIDENCE = 0.80
 
 # ───────────────── Behaviour constants ────────────────────────────
-# Base values used when calculating AFK timing.
+                                               
 BASE_SPAM_MIN, BASE_SPAM_MAX = 1, 140
 BASE_REST_MIN, BASE_REST_MAX = 1, 40
-BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 30 * 60, 45 * 60  # 30–45 mins
-BASE_LONG_AFK_MIN_SECS, BASE_LONG_AFK_MAX_SECS = 2 * 60 * 60, 3 * 60 * 60  # 2–3h
+BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS = 30 * 60, 45 * 60              
+BASE_LONG_AFK_MIN_SECS, BASE_LONG_AFK_MAX_SECS = 2 * 60 * 60, 3 * 60 * 60        
 
 HIGH_SPAM_MAX = 20
 HIGH_REST_MIN, HIGH_REST_MAX = 5, 120
-HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60  # 5–15 mins
-HIGH_LONG_AFK_MIN_SECS, HIGH_LONG_AFK_MAX_SECS = 40 * 60, 80 * 60  # 40–80m
+HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60             
+HIGH_LONG_AFK_MIN_SECS, HIGH_LONG_AFK_MAX_SECS = 40 * 60, 80 * 60          
 
-MINI_AFK_FREQ_LEVEL = 0.5  # 0 = never, 1 = always
+MINI_AFK_FREQ_LEVEL = 0.5                         
 AFK_FREQ_LEVEL = 0.5
 LONG_AFK_FREQ_LEVEL = 0.5
 
 SPAM_MIN, SPAM_MAX = BASE_SPAM_MIN, BASE_SPAM_MAX
 REST_MIN, REST_MAX = BASE_REST_MIN, BASE_REST_MAX
 CLICK_MIN_GAP, CLICK_MAX_GAP = 0.06, 1.00
-# Range of seconds to hold the mouse button down when
-# ROBUST_CLICK is enabled.
+                                                     
+                          
 CLICK_HOLD_MIN, CLICK_HOLD_MAX = 0.010, 0.060
 AFK_MIN_SECS, AFK_MAX_SECS = BASE_AFK_MIN_SECS, BASE_AFK_MAX_SECS
 LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS = (
@@ -604,14 +604,14 @@ LONG_AFK_MIN_SECS, LONG_AFK_MAX_SECS = (
     BASE_LONG_AFK_MAX_SECS,
 )
 SEGMENT_MIN, SEGMENT_MAX = 3, 6
-# Overshoot range for mouse movement (pixels). When the cursor distance is
-# small the overshoot amount is scaled down so movements between adjacent tabs
-# don't appear robotic.
+                                                                          
+                                                                              
+                       
 OVERSHOOT_MIN, OVERSHOOT_MAX = 4, 8
 LOOP_MEAN, LOOP_SD = 10, 2
 
-MAX_ACCEL = 8000  # max allowed acceleration (px/s^2)
-SMOOTH_STOP_DIST = 40  # distance (px) to begin slowing for final stop
+MAX_ACCEL = 8000                                     
+SMOOTH_STOP_DIST = 40                                                 
 
 STATS_REST_PROB = 0.10
 STATS_REST_TEST_MODE = False
@@ -624,13 +624,13 @@ TWEEN_FUNCS = [
     pag.easeInOutCubic,
 ]
 
-# Jitter settings for long mouse moves
-JITTER_PROB = 0.1  # chance per segment to add jitter
-JITTER_PIXELS = 1  # ±pixels moved during jitter
-JITTER_DIST_THRESHOLD = 100  # only apply jitter when distance > this
+                                      
+JITTER_PROB = 0.1                                    
+JITTER_PIXELS = 1                               
+JITTER_DIST_THRESHOLD = 100                                          
 JITTER_PAUSE_MIN, JITTER_PAUSE_MAX = 0.003, 0.010
 
-# Seconds without seeing the teleport icon before attempting login
+                                                                  
 LOGIN_RETRY_SECS = 180
 
 # ───────────────── Runtime state ───────────────────────────────────
@@ -644,8 +644,8 @@ overshoot_chance = 0.30
 last_move_velocities: list[float] = []
 teleport_last_seen = time.time()
 last_login_attempt = 0.0
-# Set to True while inside spam_session to disable
-# extra human-like cursor behaviours.
+                                                  
+                                     
 in_spam_session = False
 
 # ───────────────── Maths helpers ───────────────────────────────────
@@ -845,7 +845,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
     ]
     total = sum(seg_lens) or 1
     T = fitts_time(total, W, a=random.uniform(0.04, 0.06), b=random.uniform(0.04, 0.07))
-    # Add built-in random variation and slower baseline
+                                                       
     T *= random.uniform(1.6, 2.4)
 
     def _sig(t: float, k: float = 8.0) -> float:
@@ -912,7 +912,7 @@ def bezier_move(tx, ty, *, jitter_prob=None, jitter_px=None):
         prev_v = v
         dist_done += seg_len
 
-    # ensure the cursor ends exactly on the target
+                                                  
     pag.moveTo(tx, ty)
     debug(f"move complete at {pag.position()}")
 
@@ -1168,7 +1168,7 @@ def scroll_loop(dur: float) -> None:
 
 def random_tab_loop(duration):
     log(f"Short AFK: tab flipping for {duration:.1f}s")
-    mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)  # mean sec between flips
+    mu = clamp(random.gauss(4.0, 0.7), 2.0, 7.0)                          
     lam = 1.0 / mu
     t_next = time.time() + random.expovariate(lam)
     end = time.time() + duration
@@ -1370,7 +1370,7 @@ def spam_session():
         burst = gaussian_between(SPAM_MIN, SPAM_MAX)
         rest = gaussian_between(REST_MIN, REST_MAX)
 
-        # Always start by opening the Magic tab
+                                               
         click_magic_tab()
 
         loc = safe_locate(
@@ -1398,7 +1398,7 @@ def spam_session():
 
         global teleport_last_seen
         teleport_last_seen = time.time()
-        # Centre plus downward nudge
+                                    
         x, y = pag.center(loc)
         y += 3
         log(f"Click burst {burst:.1f}s at ({x}, {y})")
@@ -1409,8 +1409,8 @@ def spam_session():
             handle_afk("long_afk")
             maybe_outlier_event("burst")
 
-            # add a little randomness around the centre point using a
-            # Gaussian offset that mostly results in pixel-perfect clicks
+                                                                     
+                                                                         
             drift_x = random.gauss(0, 0.3)
             drift_y = random.gauss(0, 0.3)
             if abs(drift_x) < 0.3:
@@ -1422,7 +1422,7 @@ def spam_session():
             target_y = y + int(round(drift_y))
             bezier_move(target_x, target_y)
 
-            # if the cursor drifted, re-align and force a click
+                                                               
             if CHECK_FINAL_POS:
                 fx, fy = pag.position()
                 if math.hypot(fx - target_x, fy - target_y) > 3:
@@ -1439,7 +1439,7 @@ def spam_session():
             if LOG_CLICKS:
                 debug(f"click at {pag.position()}")
 
-            # robust click if enabled, else normal click
+                                                        
             if ROBUST_CLICK:
                 pag.mouseDown()
                 time.sleep(random.uniform(CLICK_HOLD_MIN, CLICK_HOLD_MAX))
@@ -1450,7 +1450,7 @@ def spam_session():
             if LOG_CLICKS:
                 debug("click issued")
 
-            # if the rune is still present, retry click once
+                                                            
             if CHECK_FINAL_POS:
                 chk = safe_locate(
                     TELEPORT_IMAGE,
