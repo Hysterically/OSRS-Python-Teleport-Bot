@@ -15,7 +15,7 @@ This project contains **EssayReview.pyw**, a teleport spam bot for Old School Ru
   random tab flips and the short Mini-AFK between bursts if desired.
 - Three sliders set the chance of Mini-AFK, short and long AFK breaks
   (0\% never, 100\% always) and default to 50\%.
-- The Mini-AFK rest after each burst now always lasts between 0.5 and 6 seconds.
+- The Mini-AFK rest after each burst now always lasts between 5 and 11 seconds.
 - Simple login helper that clicks the RuneScape launcher buttons.
 - Hotkeys: **1** to pause/resume, **2** to toggle the console, **3** to quit.
 

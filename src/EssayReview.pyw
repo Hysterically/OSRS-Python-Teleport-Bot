@@ -376,8 +376,8 @@ def config_prompt():
     def _update_mini_afk_desc(val: str) -> None:
         f = clamp(float(val) / 100, 0.0, 1.0)
         spam_max = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
-        rest_min = clamp((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN, 0.5, 6.0)
-        rest_max = clamp((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX, 0.5, 6.0)
+        rest_min = clamp((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN, 5.0, 11.0)
+        rest_max = clamp((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX, 5.0, 11.0)
         avg_burst = int((BASE_SPAM_MIN + spam_max) / 2)
         avg_rest = (rest_min + rest_max) / 2
         mini_afk_freq_desc.config(
@@ -601,13 +601,13 @@ def update_afk_settings() -> None:
 
     REST_MIN = clamp(
         (1 - f_rest) * BASE_REST_MIN + f_rest * HIGH_REST_MIN,
-        0.5,
-        6.0,
+        5.0,
+        11.0,
     )
     REST_MAX = clamp(
         (1 - f_rest) * BASE_REST_MAX + f_rest * HIGH_REST_MAX,
-        0.5,
-        6.0,
+        5.0,
+        11.0,
     )
 
     AFK_MIN_SECS = int(
@@ -1512,8 +1512,8 @@ def spam_session():
         burst = gaussian_between(SPAM_MIN, SPAM_MAX)
         rest = clamp(
             gaussian_between(REST_MIN, REST_MAX),
-            0.5,
-            6.0,
+            5.0,
+            11.0,
         )
 
         click_magic_tab()
