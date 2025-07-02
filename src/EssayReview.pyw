@@ -1380,8 +1380,10 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
         debug(f"Invalid AFK mode: {mode}")
         return
 
-    # Treat mini_afk as an alias for short_afk
+    # Treat mini_afk as an alias for short_afk but remember for logging
+    is_mini = False
     if mode == "mini_afk":
+        is_mini = True
         mode = "short_afk"
 
     was_micro = False
@@ -1424,10 +1426,15 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
         if random.random() >= MINI_AFK_FREQ_LEVEL:
             return
         if random.random() >= SHORT_REST_TASK_PROB:
+            if is_mini:
+                log(f"Mini AFK for {dur:.1f}s")
             time.sleep(dur)
             click_magic_tab()
             return
-        log(f"Short AFK task for {dur:.1f}s")
+        if is_mini:
+            log(f"Mini AFK task for {dur:.1f}s")
+        else:
+            log(f"Short AFK task for {dur:.1f}s")
     else:
         is_long = mode == "long_afk"
         if dur is None:
