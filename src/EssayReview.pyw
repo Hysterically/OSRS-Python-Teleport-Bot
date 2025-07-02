@@ -331,6 +331,40 @@ def config_prompt():
 
     tk.Label(
         right_frame,
+        text="Micro AFK Chance: 0=never, 100=always",
+        bg=bg,
+        fg=fg,
+    ).pack(pady=(10, 0))
+    micro_afk_freq_var = tk.DoubleVar(value=MICRO_AFK_FREQ_LEVEL * 100)
+    micro_afk_freq_desc = tk.Label(right_frame, bg=bg, fg=fg)
+    micro_afk_freq_desc.pack()
+
+    def _update_micro_desc(val: str) -> None:
+        f = clamp(float(val) / 100, 0.0, 1.0)
+        micro_afk_freq_desc.config(text=f"~{int(f * 100)}% chance per click")
+
+    micro_afk_scale = tk.Scale(
+        right_frame,
+        variable=micro_afk_freq_var,
+        from_=0,
+        to=100,
+        orient="horizontal",
+        length=200,
+        bg=bg,
+        fg=fg,
+        troughcolor=_slider_colour(micro_afk_freq_var.get()),
+        highlightthickness=0,
+        command=lambda v: (
+            _update_micro_desc(v),
+            _update_scale_colour(micro_afk_scale, v),
+        ),
+    )
+    micro_afk_scale.pack()
+    _update_scale_colour(micro_afk_scale, micro_afk_freq_var.get())
+    _update_micro_desc(micro_afk_freq_var.get())
+
+    tk.Label(
+        right_frame,
         text="Mini-AFK Chance: 0=never, 100=always",
         bg=bg,
         fg=fg,
@@ -459,6 +493,7 @@ def config_prompt():
         global ENABLE_STATS_HOVER, ENABLE_BROWSER_AFK, ENABLE_TAB_FLIP, choice
         global ENABLE_REST, TELEPORT_CONFIDENCE, DEBUG_LOGGING
         global AFK_FREQ_LEVEL, MINI_AFK_FREQ_LEVEL, LONG_AFK_FREQ_LEVEL
+        global MICRO_AFK_FREQ_LEVEL
         global ENABLE_POST_MOVE_DRIFT, POST_MOVE_DRIFT_PROB
         global ENABLE_PRE_CLICK_HOVER, PRE_CLICK_HOVER_PROB
         global ENABLE_IDLE_WANDER, IDLE_WANDER_PROB
@@ -482,6 +517,12 @@ def config_prompt():
             )
         except Exception:
             TELEPORT_CONFIDENCE = CONFIDENCE
+        try:
+            MICRO_AFK_FREQ_LEVEL = clamp(
+                float(micro_afk_freq_var.get()) / 100, 0.0, 1.0
+            )
+        except Exception:
+            MICRO_AFK_FREQ_LEVEL = 0.0
         try:
             MINI_AFK_FREQ_LEVEL = clamp(
                 float(mini_afk_freq_var.get()) / 100, 0.0, 1.0
@@ -635,6 +676,7 @@ HIGH_AFK_MIN_SECS, HIGH_AFK_MAX_SECS = 5 * 60, 15 * 60
 HIGH_LONG_AFK_MIN_SECS, HIGH_LONG_AFK_MAX_SECS = 40 * 60, 80 * 60
 
 MINI_AFK_FREQ_LEVEL = 0.5
+MICRO_AFK_FREQ_LEVEL = 0.5
 AFK_FREQ_LEVEL = 0.5
 LONG_AFK_FREQ_LEVEL = 0.5
 
@@ -1324,7 +1366,7 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
     Parameters
     ----------
     mode : str, optional
-        "mini_afk" or "short_afk" for rest periods between bursts,
+        "micro_afk", "mini_afk" or "short_afk" for rest periods between bursts,
         "normal_afk" for scheduled short breaks,
         "long_afk" for scheduled long breaks.
     dur : float | None, optional
@@ -1334,12 +1376,21 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
 
     global next_short_afk_time, next_long_afk_time
 
-    if mode not in {"mini_afk", "short_afk", "normal_afk", "long_afk"}:
+    if mode not in {"micro_afk", "mini_afk", "short_afk", "normal_afk", "long_afk"}:
         debug(f"Invalid AFK mode: {mode}")
         return
 
     # Treat mini_afk as an alias for short_afk
     if mode == "mini_afk":
+        mode = "short_afk"
+
+    was_micro = False
+    if mode == "micro_afk":
+        was_micro = True
+        if dur is None:
+            dur = gamma_between(0.8, 3.5, 2.0)
+        if random.random() > MICRO_AFK_FREQ_LEVEL:
+            return
         mode = "short_afk"
 
     if mode == "normal_afk":
@@ -1389,6 +1440,8 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
 
     ctx = "rest" if mode == "short_afk" else "afk"
     maybe_outlier_event(ctx)
+    if was_micro:
+        maybe_outlier_event("afk")
 
     if (
         mode == "short_afk"
@@ -1545,6 +1598,9 @@ def spam_session():
 
             if feature("idle_wiggle"):
                 idle_wiggle()
+
+            if random.random() < 0.05:
+                handle_afk("micro_afk")
 
         if ENABLE_REST:
             log(f"Burst done. Rest {rest:.1f}s...")
