@@ -1324,7 +1324,7 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
     Parameters
     ----------
     mode : str, optional
-        "short_afk" for rest periods between bursts,
+        "mini_afk" or "short_afk" for rest periods between bursts,
         "normal_afk" for scheduled short breaks,
         "long_afk" for scheduled long breaks.
     dur : float | None, optional
@@ -1334,9 +1334,13 @@ def handle_afk(mode: str = "normal_afk", dur: float | None = None):
 
     global next_short_afk_time, next_long_afk_time
 
-    if mode not in {"short_afk", "normal_afk", "long_afk"}:
+    if mode not in {"mini_afk", "short_afk", "normal_afk", "long_afk"}:
         debug(f"Invalid AFK mode: {mode}")
         return
+
+    # Treat mini_afk as an alias for short_afk
+    if mode == "mini_afk":
+        mode = "short_afk"
 
     if mode == "normal_afk":
         if not ENABLE_AFK:
@@ -1476,8 +1480,6 @@ def spam_session():
 
         end = time.time() + burst
         while time.time() < end and bot_active:
-            handle_afk()
-            handle_afk("long_afk")
             maybe_outlier_event("burst")
 
             drift_x = random.gauss(0, 0.3)
@@ -1546,7 +1548,7 @@ def spam_session():
 
         if ENABLE_REST:
             log(f"Burst done. Rest {rest:.1f}s...")
-            handle_afk("short_afk", rest)
+            handle_afk("mini_afk", rest)
         else:
             log("Burst done. Rest skipped.")
     finally:
