@@ -376,12 +376,12 @@ def config_prompt():
     def _update_mini_afk_desc(val: str) -> None:
         f = clamp(float(val) / 100, 0.0, 1.0)
         spam_max = int((1 - f) * BASE_SPAM_MAX + f * HIGH_SPAM_MAX)
-        rest_min = int((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN)
-        rest_max = int((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX)
+        rest_min = clamp((1 - f) * BASE_REST_MIN + f * HIGH_REST_MIN, 0.5, 6.0)
+        rest_max = clamp((1 - f) * BASE_REST_MAX + f * HIGH_REST_MAX, 0.5, 6.0)
         avg_burst = int((BASE_SPAM_MIN + spam_max) / 2)
-        avg_rest = int((rest_min + rest_max) / 2)
+        avg_rest = (rest_min + rest_max) / 2
         mini_afk_freq_desc.config(
-            text=f"~{avg_burst} teleports then {avg_rest}s rest"
+            text=f"~{avg_burst} teleports then {avg_rest:.1f}s rest"
         )
 
     mini_afk_scale = tk.Scale(
@@ -599,8 +599,16 @@ def update_afk_settings() -> None:
     SPAM_MIN = BASE_SPAM_MIN
     SPAM_MAX = int((1 - f_rest) * BASE_SPAM_MAX + f_rest * HIGH_SPAM_MAX)
 
-    REST_MIN = int((1 - f_rest) * BASE_REST_MIN + f_rest * HIGH_REST_MIN)
-    REST_MAX = int((1 - f_rest) * BASE_REST_MAX + f_rest * HIGH_REST_MAX)
+    REST_MIN = clamp(
+        (1 - f_rest) * BASE_REST_MIN + f_rest * HIGH_REST_MIN,
+        0.5,
+        6.0,
+    )
+    REST_MAX = clamp(
+        (1 - f_rest) * BASE_REST_MAX + f_rest * HIGH_REST_MAX,
+        0.5,
+        6.0,
+    )
 
     AFK_MIN_SECS = int(
         (1 - f_short) * BASE_AFK_MIN_SECS + f_short * HIGH_AFK_MIN_SECS
@@ -1502,7 +1510,11 @@ def spam_session():
     in_spam_session = True
     try:
         burst = gaussian_between(SPAM_MIN, SPAM_MAX)
-        rest = gaussian_between(REST_MIN, REST_MAX)
+        rest = clamp(
+            gaussian_between(REST_MIN, REST_MAX),
+            0.5,
+            6.0,
+        )
 
         click_magic_tab()
 
