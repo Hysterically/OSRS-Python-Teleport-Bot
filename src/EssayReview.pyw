@@ -671,6 +671,7 @@ STATS_CONFIDENCE = 0.80
 OPEN_CONFIDENCE = 0.85
 
 MAGIC_TAB_CONFIDENCE = 0.70
+HITPOINTS_CONFIDENCE = 0.70
 
 # ───────────────── Behaviour constants ────────────────────────────
 
@@ -1656,7 +1657,9 @@ def hotkey_thread():
 def hitpoints_thread():
     """Close the Hitpoints skill guide if it pops up."""
     while True:
-        if safe_locate(HITPOINTS_IMAGE, confidence=CONFIDENCE, grayscale=True):
+        if safe_locate(
+            HITPOINTS_IMAGE, confidence=HITPOINTS_CONFIDENCE, grayscale=True
+        ):
             pag.press("esc")
             time.sleep(0.5)
         time.sleep(random.uniform(3.0, 6.0))
