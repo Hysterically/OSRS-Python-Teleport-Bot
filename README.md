@@ -58,15 +58,14 @@ Press **1** at any time to pause or resume automation. Press **2** to show or hi
 
 ## Building an executable
 
-Use the `build.bat` script to create an executable version of the bot. This
-wrapper simply invokes `build-exe.bat`, which includes the `assets` folder so
-the bundled executable can locate the image files it needs. `EssayReview.pyw`
-checks the `sys._MEIPASS` attribute when running from PyInstaller so the assets
-load correctly:
+Use the cross&#x2011;platform `build.py` script to create an executable version of
+the bot. It installs PyInstaller if needed and bundles the `assets` folder so
+the packaged script can locate the image files. Run:
 
-```cmd
-build.bat
+```bash
+python build.py
 ```
 
-The generated `EssayReview.exe` will appear inside the `dist` folder.
+On Windows you can still use `build.bat`, which calls PyInstaller with the same
+options. The generated executable will appear inside the `dist` folder.
 
