@@ -669,7 +669,7 @@ TAB_IMAGES = [
 STATS_CONFIDENCE = 0.80
 OPEN_CONFIDENCE = 0.85
 
-MAGIC_TAB_CONFIDENCE = 0.80
+MAGIC_TAB_CONFIDENCE = 0.70
 
 # ───────────────── Behaviour constants ────────────────────────────
 
