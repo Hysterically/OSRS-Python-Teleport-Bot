@@ -653,6 +653,7 @@ MAGIC_TAB_IMAGE = os.path.join(ASSETS_DIR, "MagicTab.png")
 MAGIC_OPEN_IMAGE = os.path.join(ASSETS_DIR, "MagicTabOpen.png")
 PLAY_NOW_IMAGE = os.path.join(ASSETS_DIR, "PlayNow.png")
 CLICK_TO_PLAY_IMAGE = os.path.join(ASSETS_DIR, "ClickHereToPlay.png")
+HITPOINTS_IMAGE = os.path.join(ASSETS_DIR, "hitpoints.png")
 
 TAB_IMAGES = [
     os.path.join(ASSETS_DIR, "CombatTab.png"),
@@ -1649,6 +1650,18 @@ def hotkey_thread():
         time.sleep(0.05)
 
 
+# ───────────────── Hitpoints guide watcher ────────────────────────
+
+
+def hitpoints_thread():
+    """Close the Hitpoints skill guide if it pops up."""
+    while True:
+        if safe_locate(HITPOINTS_IMAGE, confidence=CONFIDENCE, grayscale=True):
+            pag.press("esc")
+            time.sleep(0.5)
+        time.sleep(random.uniform(3.0, 6.0))
+
+
 # ───────────────── Main loop ───────────────────────────────────────
 
 
@@ -1672,6 +1685,7 @@ def main_loop():
 # ───────────────── Entry ───────────────────────────────────────────
 if __name__ == "__main__":
     threading.Thread(target=hotkey_thread, daemon=True).start()
+    threading.Thread(target=hitpoints_thread, daemon=True).start()
     refresh_weights()
     next_weight_refresh = int(abs(random.gauss(LOOP_MEAN, LOOP_SD)) + 1)
     log(f"Bot started spamming {choice}. 1=pause • 3=quit")
