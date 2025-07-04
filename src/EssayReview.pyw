@@ -653,6 +653,7 @@ MAGIC_TAB_IMAGE = os.path.join(ASSETS_DIR, "MagicTab.png")
 MAGIC_OPEN_IMAGE = os.path.join(ASSETS_DIR, "MagicTabOpen.png")
 PLAY_NOW_IMAGE = os.path.join(ASSETS_DIR, "PlayNow.png")
 CLICK_TO_PLAY_IMAGE = os.path.join(ASSETS_DIR, "ClickHereToPlay.png")
+OK_IMAGE = os.path.join(ASSETS_DIR, "Ok.png")
 HITPOINTS_IMAGE = os.path.join(ASSETS_DIR, "hitpoints.png")
 
 TAB_IMAGES = [
@@ -1154,7 +1155,16 @@ def click_magic_tab():
 
 
 def login(timeout: float = 15.0) -> bool:
-    """Attempt to log in by clicking Play Now then Click Here to Play."""
+    """Attempt to log in, clicking OK if present, then Play Now and Click Here."""
+    ok = safe_locate(OK_IMAGE, confidence=CONFIDENCE, grayscale=True)
+    if ok:
+        tx, ty = pag.center(ok)
+        bezier_move(tx, ty)
+        post_move_drift()
+        pre_click_hover(tx, ty)
+        pag.click()
+        time.sleep(0.5)
+
     play = safe_locate(PLAY_NOW_IMAGE, confidence=CONFIDENCE, grayscale=True)
     if not play:
         log("⚠️ PlayNow.png not found.")
