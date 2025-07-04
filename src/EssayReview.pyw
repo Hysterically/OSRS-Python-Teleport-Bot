@@ -105,6 +105,18 @@ def log(msg: str):
     print(f"{stamp} {msg}", flush=True)
 
 
+last_log_times: dict[str, float] = {}
+
+
+def throttled_log(msg: str, interval: float = 5.0) -> None:
+    """Log the message if it hasn't been printed recently."""
+    now = time.time()
+    last = last_log_times.get(msg, 0)
+    if now - last >= interval:
+        log(msg)
+        last_log_times[msg] = now
+
+
 # ───────────────────── Config prompt ───────────────────────────────
 
 
@@ -1147,7 +1159,7 @@ def click_magic_tab():
         pag.click()
         time.sleep(0.15)
         return True
-    log("⚠️ Could not open Magic tab.")
+    throttled_log("⚠️ Could not open Magic tab.")
     return False
 
 
@@ -1534,15 +1546,15 @@ def spam_session():
             TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
         )
         if not loc:
-            log("Teleport rune not found; clicking Magic tab...")
+            throttled_log("Teleport rune not found; clicking Magic tab...")
             if not click_magic_tab():
-                log("⚠️ Could not open Magic tab; skipping burst.")
+                throttled_log("⚠️ Could not open Magic tab; skipping burst.")
                 return
             loc = safe_locate(
                 TELEPORT_IMAGE, confidence=TELEPORT_CONFIDENCE, grayscale=True
             )
             if not loc:
-                log("Teleport rune still not found; pressing F6...")
+                throttled_log("Teleport rune still not found; pressing F6...")
                 pag.press("f6")
                 time.sleep(0.5)
                 loc = safe_locate(
@@ -1551,7 +1563,7 @@ def spam_session():
                     grayscale=True,
                 )
                 if not loc:
-                    log("Teleport rune still not found; skipping burst.")
+                    throttled_log("Teleport rune still not found; skipping burst.")
                     maybe_login()
                     return
 
