@@ -685,6 +685,7 @@ OPEN_CONFIDENCE = 0.85
 
 MAGIC_TAB_CONFIDENCE = 0.70
 HITPOINTS_CONFIDENCE = 0.70
+LOGIN_IMAGE_CONFIDENCE = 0.70
 
 # ───────────────── Behaviour constants ────────────────────────────
 
@@ -742,6 +743,7 @@ JITTER_PAUSE_MIN, JITTER_PAUSE_MAX = 0.003, 0.010
 
 
 LOGIN_RETRY_SECS = 180
+MAGIC_FAIL_LOGIN_SECS = 60
 
 # ───────────────── Runtime state ───────────────────────────────────
 bot_active = True
@@ -754,6 +756,7 @@ overshoot_chance = 0.30
 last_move_velocities: list[float] = []
 teleport_last_seen = time.time()
 last_login_attempt = 0.0
+last_magic_login_attempt = 0.0
 
 
 in_spam_session = False
@@ -1160,6 +1163,14 @@ def click_magic_tab():
         time.sleep(0.15)
         return True
     throttled_log("⚠️ Could not open Magic tab.")
+    global last_magic_login_attempt
+    now = time.time()
+    if now - last_magic_login_attempt >= MAGIC_FAIL_LOGIN_SECS:
+        log("Magic tab missing; attempting login...")
+        last_magic_login_attempt = now
+        if login():
+            global teleport_last_seen
+            teleport_last_seen = time.time()
     return False
 
 
@@ -1168,7 +1179,7 @@ def click_magic_tab():
 
 def login(timeout: float = 15.0) -> bool:
     """Attempt to log in, clicking OK if present, then Play Now and Click Here."""
-    ok = safe_locate(OK_IMAGE, confidence=CONFIDENCE, grayscale=True)
+    ok = safe_locate(OK_IMAGE, confidence=LOGIN_IMAGE_CONFIDENCE, grayscale=True)
     if ok:
         tx, ty = pag.center(ok)
         bezier_move(tx, ty)
@@ -1177,7 +1188,7 @@ def login(timeout: float = 15.0) -> bool:
         pag.click()
         time.sleep(0.5)
 
-    play = safe_locate(PLAY_NOW_IMAGE, confidence=CONFIDENCE, grayscale=True)
+    play = safe_locate(PLAY_NOW_IMAGE, confidence=LOGIN_IMAGE_CONFIDENCE, grayscale=True)
     if not play:
         log("⚠️ PlayNow.png not found.")
         return False
@@ -1189,7 +1200,7 @@ def login(timeout: float = 15.0) -> bool:
     end = time.time() + timeout
     while time.time() < end:
         click = safe_locate(
-            CLICK_TO_PLAY_IMAGE, confidence=CONFIDENCE, grayscale=True
+            CLICK_TO_PLAY_IMAGE, confidence=LOGIN_IMAGE_CONFIDENCE, grayscale=True
         )
         if click:
             tx, ty = pag.center(click)
