@@ -1,4 +1,5 @@
-# OSRS Python Teleport Bot
+# OldSchool RuneScape 
+# Python Teleport Bot
 
 This project contains **EssayReview.pyw**, a teleport spam bot for Old School RuneScape. It repeatedly clicks a teleport spell using human-like mouse movement and randomised delays. Logs are printed to the terminal.
 
